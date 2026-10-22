@@ -13,9 +13,9 @@ export type NoteEventListener = (event: NoteInputEvent) => void;
 export type MicTelemetryListener = (telemetry: LiveMicTelemetry) => void;
 
 const DEFAULT_CALIBRATION: MicCalibrationConfig = {
-  rmsThreshold: 0.012,
-  yinThreshold: 0.16,
-  stabilityFrames: 2,
+  rmsThreshold: 0.0025,
+  yinThreshold: 0.22,
+  stabilityFrames: 1,
 };
 
 /**
@@ -87,7 +87,7 @@ export function estimatePitchYIN(
         minTau = tau;
       }
     }
-    if (minTau !== -1 && minVal < 0.28) {
+    if (minTau !== -1 && minVal < 0.40) {
       tauEstimate = minTau;
     } else {
       return null;
@@ -112,7 +112,7 @@ export function estimatePitchYIN(
   const frequencyHz = sampleRate / refinedTau;
   const confidence = Math.max(0, Math.min(1, 1 - yinBuffer[tauEstimate]));
 
-  if (confidence < 0.65) {
+  if (confidence < 0.56) {
     return null;
   }
 
@@ -266,6 +266,9 @@ export class MicPitchDetector {
   private ownsAudioCtx = false;
   private mediaStream: MediaStream | null = null;
   private sourceNode: MediaStreamAudioSourceNode | null = null;
+  private highpassNode: BiquadFilterNode | null = null;
+  private lowpassNode: BiquadFilterNode | null = null;
+  private preampGainNode: GainNode | null = null;
   private analyser: AnalyserNode | null = null;
   private timeDomainBuffer: Float32Array | null = null;
   private rafId: number | null = null;
@@ -377,11 +380,31 @@ export class MicPitchDetector {
       }
 
       this.sourceNode = this.audioCtx.createMediaStreamSource(this.mediaStream);
+
+      // 1. High-pass filter at 58 Hz strips room rumble, AC hum, and plastic key-thump noise
+      this.highpassNode = this.audioCtx.createBiquadFilter();
+      this.highpassNode.type = 'highpass';
+      this.highpassNode.frequency.value = 58;
+      this.highpassNode.Q.value = 0.707;
+
+      // 2. Low-pass filter at 4200 Hz removes high-frequency hiss above piano harmonics
+      this.lowpassNode = this.audioCtx.createBiquadFilter();
+      this.lowpassNode.type = 'lowpass';
+      this.lowpassNode.frequency.value = 4200;
+      this.lowpassNode.Q.value = 0.707;
+
+      // 3. Pre-amplifier (+11.6 dB / 3.8x boost) so low/normal volume E-Pianos register clearly
+      this.preampGainNode = this.audioCtx.createGain();
+      this.preampGainNode.gain.value = 3.8;
+
       this.analyser = this.audioCtx.createAnalyser();
       this.analyser.fftSize = 4096;
       this.analyser.smoothingTimeConstant = 0;
 
-      this.sourceNode.connect(this.analyser);
+      this.sourceNode.connect(this.highpassNode);
+      this.highpassNode.connect(this.lowpassNode);
+      this.lowpassNode.connect(this.preampGainNode);
+      this.preampGainNode.connect(this.analyser);
       this.timeDomainBuffer = new Float32Array(new ArrayBuffer(this.analyser.fftSize * 4));
 
       this.active = true;
@@ -420,10 +443,16 @@ export class MicPitchDetector {
     if (this.sourceNode) {
       try {
         this.sourceNode.disconnect();
+        this.highpassNode?.disconnect();
+        this.lowpassNode?.disconnect();
+        this.preampGainNode?.disconnect();
       } catch {
         // Ignore disconnect error
       }
       this.sourceNode = null;
+      this.highpassNode = null;
+      this.lowpassNode = null;
+      this.preampGainNode = null;
     }
 
     if (this.mediaStream) {
@@ -484,7 +513,7 @@ export class MicPitchDetector {
     }
 
     const avgAmbientRms = samples.reduce((acc, v) => acc + v, 0) / samples.length;
-    const calibratedThreshold = Math.max(0.006, Math.min(0.08, avgAmbientRms * 2.2));
+    const calibratedThreshold = Math.max(0.0012, Math.min(0.03, avgAmbientRms * 1.65));
     this.config.rmsThreshold = Number(calibratedThreshold.toFixed(4));
     return this.config.rmsThreshold;
   }
@@ -553,17 +582,36 @@ export class MicPitchDetector {
       }
     }
 
-    const estimate = estimatePitchYIN(
+    let estimate = estimatePitchYIN(
       buf,
       this.audioCtx.sampleRate,
       this.config.rmsThreshold,
       this.config.yinThreshold
     );
 
+    // High-sensitivity Spectral Fallback: if broadband room noise or room reflections
+    // masked the time-domain YIN dip on a quiet E-Piano, use Hann-windowed Goertzel
+    // harmonic peak isolation (which is 10x more immune to room noise at low volume).
+    if (!estimate && rms >= this.config.rmsThreshold) {
+      const spectralPeaks = estimatePolyphonicChords(
+        buf,
+        this.audioCtx.sampleRate,
+        this.expectedTargetMidis,
+        this.config.rmsThreshold
+      );
+      if (spectralPeaks.length > 0) {
+        // Prefer an expected target note if present among top peaks, else strongest peak
+        const matchedExpected = spectralPeaks.find((p) =>
+          this.expectedTargetMidis.includes(p.midi)
+        );
+        estimate = matchedExpected ?? spectralPeaks[0];
+      }
+    }
+
     if (
       estimate &&
-      Math.abs(estimate.centsOff) <= 40 &&
-      estimate.confidence >= 0.72
+      Math.abs(estimate.centsOff) <= 46 &&
+      estimate.confidence >= 0.56
     ) {
       this.silentFramesCount = 0;
       const isSameNoteAsActive = this.activeNoteMidi === estimate.midi;
@@ -605,7 +653,7 @@ export class MicPitchDetector {
 
       this.latestTelemetry = {
         active: true,
-        rmsLevel: Math.min(1, rms * 8),
+        rmsLevel: Math.min(1, rms * 14),
         dbLevel: Math.round(dbLevel),
         detectedMidi: estimate.midi,
         detectedNoteName: midiToNoteName(estimate.midi),
@@ -631,7 +679,7 @@ export class MicPitchDetector {
       }
       this.latestTelemetry = {
         active: true,
-        rmsLevel: Math.min(1, rms * 8),
+        rmsLevel: Math.min(1, rms * 14),
         dbLevel: Math.round(dbLevel),
         detectedMidi: this.activeNoteMidi,
         detectedNoteName: this.activeNoteMidi !== null ? midiToNoteName(this.activeNoteMidi) : null,

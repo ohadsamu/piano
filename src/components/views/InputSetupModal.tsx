@@ -200,9 +200,9 @@ export const InputSetupModal: React.FC<InputSetupModalProps> = ({
               <input
                 id="mic-gate-slider"
                 type="range"
-                min={0.004}
-                max={0.05}
-                step={0.002}
+                min={0.0008}
+                max={0.025}
+                step={0.0005}
                 value={micConfig.rmsThreshold}
                 onChange={(e) =>
                   onUpdateMicConfig({ rmsThreshold: parseFloat(e.target.value) })

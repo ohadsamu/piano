@@ -195,4 +195,11 @@ describe('estimatePolyphonicChords (Electric Piano Microphone Chord & Two-Hand D
     const midis = detected.map((d) => d.midi);
     expect(midis).toEqual([60, 65, 67]);
   });
+
+  it('detects quiet E-Piano notes (amplitude = 0.0045) with the new 0.0025 RMS threshold', () => {
+    const quietNote = createPianoToneBuffer(midiToFrequency(64), sampleRate, 4096, 0.0045);
+    const yinRes = estimatePitchYIN(quietNote, sampleRate);
+    expect(yinRes).not.toBeNull();
+    expect(yinRes?.midi).toBe(64);
+  });
 });

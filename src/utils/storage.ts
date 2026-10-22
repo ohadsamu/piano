@@ -41,9 +41,9 @@ const DEFAULT_PROFILE: PersistedUserProfile = {
   watchedVideoIds: [],
   completedWorkoutCounts: {},
   micCalibration: {
-    rmsThreshold: 0.012,
-    yinThreshold: 0.16,
-    stabilityFrames: 2,
+    rmsThreshold: 0.0025,
+    yinThreshold: 0.22,
+    stabilityFrames: 1,
   },
 };
 
@@ -52,6 +52,21 @@ export function loadUserProfile(): PersistedUserProfile {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_PROFILE };
     const parsed = JSON.parse(raw) as Partial<PersistedUserProfile>;
+    const savedMic = parsed.micCalibration;
+    // Auto-migrate legacy insensitive 0.012 threshold down to 0.0025 for E-Piano sensitivity
+    const migratedMic: MicCalibrationConfig = {
+      ...DEFAULT_PROFILE.micCalibration,
+      ...(savedMic ?? {}),
+      rmsThreshold:
+        savedMic?.rmsThreshold && savedMic.rmsThreshold >= 0.01
+          ? 0.0025
+          : savedMic?.rmsThreshold ?? DEFAULT_PROFILE.micCalibration.rmsThreshold,
+      yinThreshold:
+        savedMic?.yinThreshold && savedMic.yinThreshold <= 0.16
+          ? 0.22
+          : savedMic?.yinThreshold ?? DEFAULT_PROFILE.micCalibration.yinThreshold,
+      stabilityFrames: 1,
+    };
     return {
       ...DEFAULT_PROFILE,
       ...parsed,
@@ -59,10 +74,7 @@ export function loadUserProfile(): PersistedUserProfile {
         ...DEFAULT_PROFILE.lessonProgress,
         ...(parsed.lessonProgress ?? {}),
       },
-      micCalibration: {
-        ...DEFAULT_PROFILE.micCalibration,
-        ...(parsed.micCalibration ?? {}),
-      },
+      micCalibration: migratedMic,
     };
   } catch {
     return { ...DEFAULT_PROFILE };
