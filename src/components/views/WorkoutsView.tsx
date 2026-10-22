@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowLeft,
   CheckCircle2,
@@ -59,14 +59,18 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
   const [streak, setStreak] = useState(0);
   const [scoreXp, setScoreXp] = useState(0);
   const [completed, setCompleted] = useState(false);
+  const isTransitioningRef = useRef(false);
 
   const activeWorkout =
     workouts.find((w) => w.id === selectedWorkoutId) ?? workouts[0];
   const currentCard: WorkoutCard | undefined =
     activeWorkout?.cards[cardIndex];
+  const activeCard = currentCard;
+  const onPlayReferenceNote = onPlayNote;
 
   // Reset when workout changes
   const startWorkout = (workoutId: string) => {
+    isTransitioningRef.current = false;
     setSelectedWorkoutId(workoutId);
     setCardIndex(0);
     setSatisfiedMidis([]);
@@ -96,7 +100,13 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
 
   // Evaluate incoming note input against current workout card
   useEffect(() => {
-    if (!lastNoteInput || lastNoteInput.type !== 'note_on' || !currentCard || completed) {
+    if (
+      !lastNoteInput ||
+      lastNoteInput.type !== 'note_on' ||
+      !currentCard ||
+      completed ||
+      isTransitioningRef.current
+    ) {
       return;
     }
 
@@ -109,6 +119,7 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
       setWrongMidis([]);
 
       if (nextSatisfied.length >= currentCard.targetMidis.length) {
+        isTransitioningRef.current = true;
         const earned = hintRevealed ? 25 : 50;
         const nextXp = scoreXp + earned;
         setScoreXp(nextXp);
@@ -122,6 +133,7 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
         });
 
         setTimeout(() => {
+          isTransitioningRef.current = false;
           if (cardIndex + 1 < activeWorkout.cards.length) {
             const nextIdx = cardIndex + 1;
             const nextCard = activeWorkout.cards[nextIdx];
@@ -170,7 +182,6 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
       });
     }
   }, [lastNoteInput]);
-
   if (!activeWorkout) return null;
 
   return (
@@ -240,26 +251,36 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
         currentCard && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Left 2 Columns: Challenge Card & Staff/Ear Prompt */}
-            <div className="lg:col-span-2 bg-[#161922] border border-[#F5F2EB]/10 rounded-2xl p-6 flex flex-col justify-between space-y-5">
-              <div className="flex items-center justify-between border-b border-[#F5F2EB]/10 pb-4">
-                <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-1 rounded-lg bg-[#1E2230] font-tabular text-xs font-bold text-[#E5A93C]">
-                    CARD {cardIndex + 1} / {activeWorkout.cards.length}
-                  </span>
-                  <span className="text-xs font-semibold uppercase tracking-wider text-[#38BDF8]">
-                    {currentCard.clef === 'treble' ? 'Treble Clef' : 'Bass Clef'} •{' '}
-                    {currentCard.hand === 'right' ? 'Right Hand' : 'Left Hand'}
-                  </span>
+            <div className="lg:col-span-2 bg-[#161922] border border-[#F5F2EB]/10 rounded-2xl p-4 sm:p-6 flex flex-col justify-between space-y-5 overflow-hidden">
+              {/* Workout Progress Bar */}
+              <div className="space-y-3 border-b border-[#F5F2EB]/10 pb-4">
+                <div className="w-full h-2 rounded-full bg-[#0D0F14] overflow-hidden border border-[#F5F2EB]/10">
+                  <div
+                    className="h-full bg-gradient-to-r from-[#38BDF8] to-[#10B981] transition-all duration-300"
+                    style={{
+                      width: `${((cardIndex) / activeWorkout.cards.length) * 100}%`,
+                    }}
+                  />
                 </div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <span className="px-2.5 py-1 rounded-lg bg-[#1E2230] font-tabular text-xs font-bold text-[#E5A93C]">
+                      CARD {cardIndex + 1} / {activeWorkout.cards.length}
+                    </span>
+                    <span className="text-xs font-semibold uppercase tracking-wider text-[#38BDF8]">
+                      {currentCard.clef === 'treble' ? 'Treble Clef' : 'Bass Clef'} •{' '}
+                      {currentCard.hand === 'right' ? 'Right Hand' : 'Left Hand'}
+                    </span>
+                  </div>
 
-                <div className="flex items-center gap-4 font-tabular text-xs">
-                  <span className="flex items-center gap-1 text-[#F59E0B] font-bold">
-                    <Flame className="w-4 h-4" /> Streak: {streak}
-                  </span>
-                  <span className="text-[#10B981] font-bold">+{scoreXp} XP</span>
+                  <div className="flex items-center gap-4 font-tabular text-xs">
+                    <span className="flex items-center gap-1 text-[#F59E0B] font-bold">
+                      <Flame className="w-4 h-4" /> Streak: {streak}
+                    </span>
+                    <span className="text-[#10B981] font-bold">+{scoreXp} XP</span>
+                  </div>
                 </div>
               </div>
-
               {/* Prompt Display */}
               <div className="py-4 text-center space-y-4">
                 <p className="text-xs font-semibold text-[#B8B2A6]">
@@ -363,7 +384,7 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
 
               {/* Live Corrective Coach Banner */}
               <div
-                className={`p-4 rounded-xl border flex items-center justify-between gap-4 ${
+                className={`p-3.5 sm:p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
                   feedbackBanner.status === 'wrong'
                     ? 'bg-[#F43F5E]/15 border-[#F43F5E]/50 text-[#F5F2EB]'
                     : feedbackBanner.status === 'correct'
@@ -371,25 +392,41 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
                     : 'bg-[#0D0F14] border-[#F5F2EB]/10 text-[#B8B2A6]'
                 }`}
               >
-                <div className="space-y-0.5">
+                <div className="space-y-0.5 min-w-0">
                   <div className="text-sm font-semibold text-[#F5F2EB]">
                     {feedbackBanner.headline}
                   </div>
                   <div className="text-xs text-[#B8B2A6]">{feedbackBanner.detail}</div>
                 </div>
-                {!hintRevealed && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setHintRevealed(true);
-                      onPlayChord(currentCard.targetMidis, 0.8, 0.7);
-                    }}
-                    className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40 text-xs font-semibold"
-                  >
-                    <Lightbulb className="w-3.5 h-3.5" />
-                    <span>Show Key Hint</span>
-                  </button>
-                )}
+                <div className="flex flex-wrap items-center gap-2 shrink-0">
+                  {activeCard && (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        activeCard.targetMidis.forEach((m, i) =>
+                          setTimeout(() => onPlayReferenceNote(m), i * 90)
+                        )
+                      }
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1E2230] hover:bg-[#282D3E] text-[#38BDF8] border border-[#38BDF8]/40 text-xs font-semibold transition-colors"
+                    >
+                      <Volume2 className="w-3.5 h-3.5" />
+                      <span>🔊 Hear Target</span>
+                    </button>
+                  )}
+                  {!hintRevealed && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHintRevealed(true);
+                        onPlayChord(currentCard.targetMidis, 0.8, 0.7);
+                      }}
+                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40 text-xs font-semibold"
+                    >
+                      <Lightbulb className="w-3.5 h-3.5" />
+                      <span>Show Key Hint</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 

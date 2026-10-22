@@ -32,8 +32,16 @@ export interface LiveCoachBannerProps {
   remediationStageIndex?: number;
   remediationCleanPasses?: number;
   snapshot?: PracticeSessionSnapshot;
+  activePrompt?: KeyDiscoveryPrompt | null;
   onOpenFixMe?: () => void;
+  onOpenFixMeModal?: () => void;
   onOpenVideo?: (videoId?: string) => void;
+  onWatchVideo?: (videoId?: string) => void;
+  recommendedVideoId?: string;
+  lessonStepTitle?: string;
+  micActive?: boolean;
+  midiConnected?: boolean;
+  onToggleMic?: () => void;
   troubleCount?: number;
   className?: string;
 }
@@ -50,8 +58,15 @@ export const LiveCoachBanner: React.FC<LiveCoachBannerProps> = ({
   remediationStageIndex: propRemediationIdx,
   remediationCleanPasses: propRemediationPasses,
   snapshot,
+  activePrompt: propActivePrompt,
   onOpenFixMe,
+  onOpenFixMeModal,
   onOpenVideo,
+  onWatchVideo,
+  recommendedVideoId,
+  micActive,
+  midiConnected,
+  onToggleMic,
   troubleCount = 0,
   className = '',
 }) => {
@@ -65,7 +80,9 @@ export const LiveCoachBanner: React.FC<LiveCoachBannerProps> = ({
     propRemediationIdx ?? snapshot?.remediationStageIndex ?? 0;
   const remediationCleanPasses =
     propRemediationPasses ?? snapshot?.remediationCleanPasses ?? 0;
-
+  const handleFixMe = onOpenFixMe ?? onOpenFixMeModal;
+  const handleWatchVideo = onOpenVideo ?? onWatchVideo;
+  const showMicCta = !micActive && !midiConnected && Boolean(onToggleMic);
   // 1. High-Priority State: Live Directional Correction (User Struck a Wrong Key)
   if (liveCorrection && liveCorrection.direction !== 'exact') {
     const isMoveLeft = liveCorrection.direction === 'left';
@@ -127,18 +144,19 @@ export const LiveCoachBanner: React.FC<LiveCoachBannerProps> = ({
             )}
           </div>
 
-          {onOpenVideo && (
+          {handleWatchVideo && (
             <button
               type="button"
               onClick={() => {
                 const delta = Math.abs(liveCorrection.semitoneDelta);
                 const contextualVid =
-                  delta >= 5
+                  recommendedVideoId ??
+                  (delta >= 5
                     ? 'vid-02-middle-c-landmark'
                     : delta >= 3
                     ? 'vid-03-steps-vs-skips'
-                    : 'vid-01-posture-arch';
-                onOpenVideo(contextualVid);
+                    : 'vid-01-posture-arch');
+                handleWatchVideo(contextualVid);
               }}
               className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-[#1E2230] hover:bg-[#282D40] border border-[#E5A93C]/45 text-[#E5A93C] text-xs font-semibold transition-colors"
             >
@@ -152,25 +170,26 @@ export const LiveCoachBanner: React.FC<LiveCoachBannerProps> = ({
   }
 
   // 2. Key Discovery Mode Prompt & Landmark Hint
-  if (mode === 'key_discovery' && discoveryPrompts.length > 0) {
+  if (mode === 'key_discovery' && (discoveryPrompts.length > 0 || propActivePrompt)) {
     const activePrompt =
+      propActivePrompt ??
       discoveryPrompts[Math.min(discoveryIndex, discoveryPrompts.length - 1)];
 
     return (
       <div
         role="status"
-        className={`w-full bg-[#141A26] border-b border-[#38BDF8]/35 px-4 py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${className}`}
+        className={`w-full bg-[#141A26] border-b border-[#38BDF8]/35 px-3 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2 ${className}`}
       >
-        <div className="flex items-start sm:items-center gap-3">
+        <div className="flex items-start sm:items-center gap-2.5 sm:gap-3 min-w-0">
           <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-[#38BDF8]/15 border border-[#38BDF8] text-[#38BDF8] shrink-0">
             <Compass className="w-4 h-4" />
           </span>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 min-w-0">
             <span className="font-tabular text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-[#38BDF8]/20 text-[#38BDF8]">
-              Landmark Check { Math.min(discoveryCompletedCount + 1, discoveryPrompts.length) } /{' '}
-              {discoveryPrompts.length}
+              Landmark Check {Math.min(discoveryCompletedCount + 1, Math.max(1, discoveryPrompts.length))} /{' '}
+              {Math.max(1, discoveryPrompts.length)}
             </span>
-            <span className="text-[15px] font-semibold text-[#F5F2EB]">
+            <span className="text-sm sm:text-[15px] font-semibold text-[#F5F2EB]">
               {activePrompt.instruction}
             </span>
             <span className="text-xs text-[#B8B2A6] italic">
@@ -179,7 +198,16 @@ export const LiveCoachBanner: React.FC<LiveCoachBannerProps> = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {showMicCta && (
+            <button
+              type="button"
+              onClick={onToggleMic}
+              className="bg-[#10B981] hover:bg-[#34D399] text-[#090B0F] font-semibold text-xs px-3 py-1.5 rounded-xl shadow-[0_0_14px_rgba(16,185,129,0.35)] transition-all whitespace-nowrap"
+            >
+              🎹 Enable Mic for Real Piano
+            </button>
+          )}
           <span className="px-2.5 py-1 rounded bg-[#0D0F14] border border-white/10 font-tabular text-xs font-semibold text-[#E5A93C]">
             Target: {activePrompt.targetNoteName} ({getHandLabel(activePrompt.hand)}{' '}
             {getFingerLabel(activePrompt.finger)})
@@ -235,18 +263,27 @@ export const LiveCoachBanner: React.FC<LiveCoachBannerProps> = ({
     new Set(activeNotes.map((n) => n.chordSymbol).filter(Boolean))
   ).join(' / ');
 
+  const currentMeasure = snapshot?.currentMeasure ?? 0;
+  const currentBeat = snapshot?.currentBeat ?? 0;
+
   return (
     <div
       role="status"
-      className={`w-full bg-[#131620] border-b border-white/10 px-4 py-2 flex flex-wrap items-center justify-between gap-2 ${className}`}
+      className={`w-full bg-[#131620] border-b border-white/10 px-3 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2 ${className}`}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 min-w-0">
         <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#E5A93C]/15 border border-[#E5A93C]/45 text-[#E5A93C] shrink-0">
           <Music2 className="w-3.5 h-3.5" />
         </span>
 
+        {snapshot && (
+          <span className="px-2 py-0.5 rounded bg-[#0D0F14] border border-white/10 font-tabular text-[11px] font-bold text-[#B8B2A6] shrink-0">
+            Bar {currentMeasure + 1} · Beat {Math.floor(currentBeat % 4) + 1}
+          </span>
+        )}
+
         {primaryNote ? (
-          <div className="flex flex-wrap items-center gap-2 text-sm">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
             <span className="font-semibold text-[#F5F2EB]">
               {mode === 'wait_mode' ? 'Wait Mode Target:' : 'Current Target:'}
             </span>
@@ -269,27 +306,42 @@ export const LiveCoachBanner: React.FC<LiveCoachBannerProps> = ({
                 </span>
               </span>
             ))}
+            {streak > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#10B981]/15 border border-[#10B981]/40 text-[#34D399] font-tabular text-xs font-bold">
+                ✓ {streak} in a row · Next note →
+              </span>
+            )}
             {chordNames && (
               <span className="px-2 py-0.5 rounded bg-[#E5A93C]/15 text-[#E5A93C] font-tabular text-xs font-bold">
                 Chord: {chordNames}
               </span>
             )}
             {primaryNote.techniqueTip && (
-              <span className="text-xs text-[#B8B2A6] inline-flex items-center gap-1 ml-1">
+              <span className="text-xs text-[#B8B2A6] hidden md:inline-flex items-center gap-1 ml-1">
                 <Sparkles className="w-3 h-3 text-[#E5A93C]" />
                 {primaryNote.techniqueTip}
               </span>
             )}
           </div>
         ) : (
-          <span className="text-sm text-[#B8B2A6]">
+          <span className="text-xs sm:text-sm text-[#B8B2A6]">
             Keep your knuckles gently curved and play the illuminated target keys.
           </span>
         )}
       </div>
 
-      {/* Right Side: Streak Counter + On-Demand "Fix Me" Diagnostic Trigger */}
-      <div className="flex items-center gap-2.5">
+      {/* Right Side: 1-Tap Mic CTA + Streak Counter + On-Demand "Fix Me" Diagnostic Trigger */}
+      <div className="flex flex-wrap items-center gap-2 shrink-0">
+        {showMicCta && (
+          <button
+            type="button"
+            onClick={onToggleMic}
+            className="bg-[#10B981] hover:bg-[#34D399] text-[#090B0F] font-semibold text-xs px-3 py-1.5 rounded-xl shadow-[0_0_14px_rgba(16,185,129,0.35)] transition-all whitespace-nowrap"
+          >
+            🎹 Enable Mic for Real Piano
+          </button>
+        )}
+
         {streak >= 3 && (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#10B981]/15 border border-[#10B981]/40 text-[#34D399] font-tabular text-xs font-bold">
             <Flame className="w-3.5 h-3.5 text-[#E5A93C]" />
@@ -297,10 +349,10 @@ export const LiveCoachBanner: React.FC<LiveCoachBannerProps> = ({
           </span>
         )}
 
-        {onOpenFixMe && (
+        {handleFixMe && (
           <button
             type="button"
-            onClick={onOpenFixMe}
+            onClick={handleFixMe}
             className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1E2230] hover:bg-[#282D42] border border-[#E5A93C]/50 text-[#F5F2EB] text-xs font-semibold transition-colors"
           >
             <Wrench className="w-3.5 h-3.5 text-[#E5A93C]" />

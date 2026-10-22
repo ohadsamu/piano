@@ -399,7 +399,7 @@ export const InteractiveVideoPlayer: React.FC<InteractiveVideoPlayerProps> = ({
             <div className="flex flex-col justify-between flex-1">
               {/* Overhead Camera Narration Stage */}
               <div className="p-4 sm:p-5 bg-gradient-to-b from-[#141824] to-[#090B0F] space-y-3">
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#38BDF8]/15 border border-[#38BDF8]/40 text-[#38BDF8] font-tabular font-semibold">
                     <span className="w-2 h-2 rounded-full bg-[#38BDF8] animate-ping" />
                     OVERHEAD CONSERVATORY CAMERA
@@ -412,7 +412,7 @@ export const InteractiveVideoPlayer: React.FC<InteractiveVideoPlayerProps> = ({
                 {/* Synchronized Instructor Caption Box */}
                 {activeChapter && (
                   <div className="p-3.5 rounded-lg bg-[#161922]/95 border border-[#E5A93C]/35 space-y-1.5 shadow-md">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                       <span className="text-xs font-bold text-[#E5A93C] uppercase tracking-wider">
                         {activeChapter.title}
                       </span>

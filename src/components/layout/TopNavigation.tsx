@@ -52,23 +52,23 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
 
   return (
     <header className="border-b border-[#F5F2EB]/10 bg-[#0D0F14]/95 backdrop-blur-md sticky top-0 z-30">
-      <div className="max-w-[1600px] mx-auto px-3 sm:px-6 h-12 sm:h-16 flex items-center justify-between gap-2 sm:gap-3">
+      <div className="max-w-[1600px] mx-auto px-2 sm:px-6 h-12 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3">
         {/* Brand Identity */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             type="button"
             onClick={() => onSelectTab('curriculum')}
-            className="flex items-center gap-3 text-left group focus:outline-none"
+            className="flex items-center gap-2.5 text-left group focus:outline-none"
           >
-            <div className="w-10 h-10 rounded-lg bg-[#161922] border border-[#E5A93C]/40 flex items-center justify-center shadow-inner group-hover:border-[#E5A93C] transition-colors">
-              <Music2 className="w-5 h-5 text-[#E5A93C]" />
+            <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-[#161922] border border-[#E5A93C]/40 flex items-center justify-center shadow-inner group-hover:border-[#E5A93C] transition-colors shrink-0">
+              <Music2 className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-[#E5A93C]" />
             </div>
-            <div>
+            <div className="hidden xl:block">
               <div className="flex items-center gap-2">
                 <span className="font-editorial text-lg font-semibold tracking-tight text-[#F5F2EB]">
                   Nocturne &amp; Ivory
                 </span>
-                <span className="hidden xl:inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#E5A93C]/15 text-[#E5A93C] border border-[#E5A93C]/30">
+                <span className="hidden 2xl:inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-[#E5A93C]/15 text-[#E5A93C] border border-[#E5A93C]/30">
                   Conservatory Studio
                 </span>
               </div>
@@ -82,47 +82,50 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
         {/* Primary View Switcher */}
         <nav
           aria-label="Primary studio navigation"
-          className="flex items-center bg-[#161922] p-1 rounded-xl border border-[#F5F2EB]/10"
+          className="flex items-center bg-[#161922] p-0.5 sm:p-1 rounded-xl border border-[#F5F2EB]/10 shrink-0"
         >
           <button
             type="button"
             onClick={() => onSelectTab('curriculum')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+            className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'curriculum'
                 ? 'bg-[#1E2230] text-[#F5F2EB] shadow-sm border border-[#E5A93C]/40'
                 : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
             }`}
           >
-            <BookOpen className="w-4 h-4 text-[#38BDF8]" />
-            <span>Curriculum Path</span>
+            <BookOpen className="hidden sm:block w-4 h-4 text-[#38BDF8] shrink-0" />
+            <span className="hidden lg:inline">Curriculum Path</span>
+            <span className="lg:hidden">Path</span>
           </button>
 
           <button
             type="button"
             onClick={() => onSelectTab('stage')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+            className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'stage'
                 ? 'bg-[#1E2230] text-[#F5F2EB] shadow-sm border border-[#E5A93C]/40'
                 : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
             }`}
           >
-            <Sparkles className="w-4 h-4 text-[#E5A93C]" />
-            <span>Practice Stage</span>
+            <Sparkles className="hidden sm:block w-4 h-4 text-[#E5A93C] shrink-0" />
+            <span className="hidden lg:inline">Practice Stage</span>
+            <span className="lg:hidden">Stage</span>
           </button>
 
           <button
             type="button"
             onClick={() => onSelectTab('videos')}
-            className={`relative flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+            className={`relative flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'videos'
                 ? 'bg-[#1E2230] text-[#F5F2EB] shadow-sm border border-[#E5A93C]/40'
                 : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
             }`}
           >
-            <PlaySquare className="w-4 h-4 text-[#10B981]" />
-            <span>Video Academy</span>
+            <PlaySquare className="hidden sm:block w-4 h-4 text-[#10B981] shrink-0" />
+            <span className="hidden lg:inline">Video Academy</span>
+            <span className="lg:hidden">Videos</span>
             {unwatchedRecommendedVideosCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-tabular font-bold bg-[#E5A93C] text-[#0D0F14]">
+              <span className="hidden sm:inline-flex ml-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-tabular font-bold bg-[#E5A93C] text-[#0D0F14]">
                 {unwatchedRecommendedVideosCount}
               </span>
             )}
@@ -131,20 +134,20 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
           <button
             type="button"
             onClick={() => onSelectTab('workouts')}
-            className={`flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-all ${
+            className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3.5 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === 'workouts'
                 ? 'bg-[#1E2230] text-[#F5F2EB] shadow-sm border border-[#E5A93C]/40'
                 : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
             }`}
           >
-            <Zap className="w-4 h-4 text-[#EC4899]" />
-            <span className="hidden md:inline">5-Min Workouts</span>
-            <span className="md:hidden">Workouts</span>
+            <Zap className="hidden sm:block w-4 h-4 text-[#EC4899] shrink-0" />
+            <span className="hidden lg:inline">5-Min Workouts</span>
+            <span className="lg:hidden">Workouts</span>
           </button>
         </nav>
 
         {/* Instrument Input Readiness & Progress Bar */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Live Microphone Toggle Pill */}
           <button
             type="button"
@@ -154,10 +157,10 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 ? 'Acoustic Piano Microphone Listening Active — Click to Mute'
                 : 'Enable Microphone to detect notes from your real piano or keyboard'
             }
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+            className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium border transition-all whitespace-nowrap ${
               micActive
                 ? 'bg-[#10B981]/15 border-[#10B981]/50 text-[#10B981]'
-                : 'bg-[#161922] border-[#F5F2EB]/10 text-[#B8B2A6] hover:text-[#F5F2EB] hover:border-[#F5F2EB]/25'
+                : 'bg-[#E5A93C]/10 border-[#E5A93C]/40 text-[#F5F2EB] hover:bg-[#E5A93C]/20'
             }`}
           >
             {micActive ? (
@@ -166,17 +169,18 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75" />
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]" />
                 </span>
-                <Mic className="w-3.5 h-3.5" />
+                <Mic className="w-3.5 h-3.5 shrink-0" />
                 <span className="font-tabular">
                   {micTelemetry.detectedNoteName
                     ? `Mic: ${micTelemetry.detectedNoteName}`
-                    : 'Mic: Listening'}
+                    : 'Mic: On'}
                 </span>
               </>
             ) : (
               <>
-                <MicOff className="w-3.5 h-3.5 text-[#7D8494]" />
-                <span className="hidden lg:inline">Mic Input: Off</span>
+                <MicOff className="w-3.5 h-3.5 text-[#E5A93C] shrink-0" />
+                <span className="inline sm:hidden font-semibold text-[#E5A93C]">Mic</span>
+                <span className="hidden sm:inline font-semibold text-[#E5A93C]">Enable Piano Mic</span>
               </>
             )}
           </button>
@@ -185,7 +189,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
           <button
             type="button"
             onClick={onOpenInputSetup}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#161922] border border-[#F5F2EB]/10 text-[#B8B2A6] hover:text-[#F5F2EB] hover:border-[#E5A93C]/40 transition-colors"
+            className="flex items-center gap-1.5 px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs font-medium bg-[#161922] border border-[#F5F2EB]/10 text-[#B8B2A6] hover:text-[#F5F2EB] hover:border-[#E5A93C]/40 transition-colors"
             title="Configure Microphone Calibration, USB/Bluetooth MIDI Keyboard, and Computer Keyboard Shortcuts"
           >
             <Keyboard className="w-3.5 h-3.5 text-[#38BDF8]" />
@@ -194,7 +198,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                 ? `MIDI: ${connectedMidi[0].name}`
                 : 'QWERTY & Touch Ready'}
             </span>
-            <Sliders className="w-3 h-3 text-[#7D8494]" />
+            <Sliders className="hidden sm:block w-3 h-3 text-[#7D8494]" />
           </button>
 
           {/* Quick Audio Test Chime */}

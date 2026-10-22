@@ -204,7 +204,7 @@ export const CurriculumMapView: React.FC<CurriculumMapViewProps> = ({
                   </div>
 
                   {/* Clickable 5 Steps */}
-                  <div className="grid grid-cols-5 gap-1.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
                     {lesson.steps.map((st, idx) => {
                       const isDone = prog?.completedStepNumbers?.includes(st.stepNumber);
                       return (
@@ -290,7 +290,7 @@ export const CurriculumMapView: React.FC<CurriculumMapViewProps> = ({
                 {activeLesson.steps[nextStepIndex]?.instruction}
               </p>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={() => onOpenVideo(activeLesson.primaryVideoId)}

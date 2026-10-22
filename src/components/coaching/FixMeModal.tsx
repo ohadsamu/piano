@@ -10,6 +10,7 @@ import {
   Sparkles,
   Star,
   Target,
+  Trophy,
   Video,
   Wrench,
   X,
@@ -33,6 +34,8 @@ export interface FixMeModalProps {
   onWatchVideo?: (videoId: string) => void;
   onLoopMeasure?: (measureIndex: number) => void;
   onRetrySong?: () => void;
+  onNextStepOrLesson?: () => void;
+  nextStepLabel?: string;
   className?: string;
 }
 
@@ -46,6 +49,8 @@ export const FixMeModal: React.FC<FixMeModalProps> = ({
   onWatchVideo,
   onLoopMeasure,
   onRetrySong,
+  onNextStepOrLesson,
+  nextStepLabel,
   className = '',
 }) => {
   if (!isOpen || !report) return null;
@@ -187,12 +192,18 @@ export const FixMeModal: React.FC<FixMeModalProps> = ({
         <div className="flex items-start sm:items-center justify-between gap-4 px-5 py-4 bg-[#161922] border-b border-white/10 shrink-0">
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="w-10 h-10 rounded-lg bg-[#E5A93C]/15 border border-[#E5A93C]/50 flex items-center justify-center text-[#E5A93C] shrink-0">
-              <Wrench className="w-5 h-5" />
+              {report.detectedIssues.length === 0 || report.starsEarned === 3 ? (
+                <Trophy className="w-5 h-5 text-[#E5A93C]" />
+              ) : (
+                <Wrench className="w-5 h-5" />
+              )}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-tabular font-bold uppercase tracking-wider text-[#E5A93C]">
-                  Identify My Play &amp; Fix Me · Conservatory Diagnostic
+                  {report.detectedIssues.length === 0 || report.starsEarned === 3
+                    ? 'Conservatory Stage Performance · Mastery Report'
+                    : 'Identify My Play & Fix Me · Conservatory Diagnostic'}
                 </span>
               </div>
               <h2
@@ -540,7 +551,7 @@ export const FixMeModal: React.FC<FixMeModalProps> = ({
             memory 4× faster than restarting from Bar 1.
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
             {onRetrySong && (
               <button
                 type="button"
@@ -563,6 +574,19 @@ export const FixMeModal: React.FC<FixMeModalProps> = ({
               >
                 <Wrench className="w-3.5 h-3.5" />
                 <span>Start 3-Step Fix Drill</span>
+              </button>
+            )}
+
+            {onNextStepOrLesson && (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onNextStepOrLesson();
+                }}
+                className="inline-flex items-center gap-1.5 bg-[#10B981] hover:bg-[#34D399] text-[#090B0F] font-bold px-4 py-2 rounded-xl text-xs transition-colors shadow-[0_0_14px_rgba(16,185,129,0.3)]"
+              >
+                <span>{nextStepLabel ?? 'Continue to Next Step →'}</span>
               </button>
             )}
           </div>

@@ -7,7 +7,6 @@ import {
   Play,
   Repeat,
   RotateCcw,
-  Sparkles,
   Volume2,
   Wrench,
 } from 'lucide-react';
@@ -78,29 +77,28 @@ export const TransportControlBar: React.FC<TransportControlBarProps> = ({
   showOverheadHands,
   onToggleShowOverheadHands,
   onOpenFixMeCoach,
-  onOpenVideoCoach,
   troubleMeasuresCount,
 }) => {
   return (
-    <div className="bg-[#161922] border-b border-[#F5F2EB]/10 px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+    <div className="bg-[#161922] border-b border-[#F5F2EB]/10 px-3 py-2 flex flex-wrap items-center justify-between gap-2">
       {/* Left: Transport Play/Pause/Restart + Live Measure/Beat Readout */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 sm:gap-2">
         {!isPlaying || isPaused ? (
           <button
             type="button"
             onClick={onStartOrResume}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#E5A93C] hover:bg-[#F3C66F] text-[#0D0F14] font-semibold text-xs sm:text-sm shadow-sm transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#E5A93C] hover:bg-[#F3C66F] text-[#0D0F14] font-semibold text-xs shadow-sm transition-colors whitespace-nowrap"
           >
-            <Play className="w-4 h-4 fill-current" />
+            <Play className="w-3.5 h-3.5 fill-current shrink-0" />
             <span>{isPaused ? 'Resume' : 'Start Practice'}</span>
           </button>
         ) : (
           <button
             type="button"
             onClick={onPause}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#1E2230] hover:bg-[#282D3E] text-[#F5F2EB] border border-[#E5A93C]/50 font-semibold text-xs sm:text-sm transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1E2230] hover:bg-[#282D3E] text-[#F5F2EB] border border-[#E5A93C]/50 font-semibold text-xs transition-colors whitespace-nowrap"
           >
-            <Pause className="w-4 h-4" />
+            <Pause className="w-3.5 h-3.5 shrink-0" />
             <span>Pause</span>
           </button>
         )}
@@ -108,14 +106,14 @@ export const TransportControlBar: React.FC<TransportControlBarProps> = ({
         <button
           type="button"
           onClick={onRestart}
-          className="p-2 rounded-lg bg-[#1E2230] hover:bg-[#282D3E] text-[#B8B2A6] hover:text-[#F5F2EB] border border-[#F5F2EB]/10 transition-colors"
+          className="p-1.5 rounded-lg bg-[#1E2230] hover:bg-[#282D3E] text-[#B8B2A6] hover:text-[#F5F2EB] border border-[#F5F2EB]/10 transition-colors"
           title="Restart current stage from beginning"
         >
-          <RotateCcw className="w-4 h-4" />
+          <RotateCcw className="w-3.5 h-3.5" />
         </button>
 
         {/* Live Measure & Beat Counter */}
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#0D0F14] border border-[#F5F2EB]/10 font-tabular text-xs">
+        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#0D0F14] border border-[#F5F2EB]/10 font-tabular text-xs whitespace-nowrap">
           <span className="text-[#7D8494]">BAR</span>
           <span className="text-[#F5F2EB] font-bold">
             {String(currentMeasure + 1).padStart(2, '0')}/{String(totalMeasures).padStart(2, '0')}
@@ -128,24 +126,25 @@ export const TransportControlBar: React.FC<TransportControlBarProps> = ({
       </div>
 
       {/* Center: Practice Mode Switcher (Wait Mode / Slow Flow / Perform / Auto-Listen) */}
-      <div className="flex items-center gap-1 bg-[#0D0F14] p-1 rounded-xl border border-[#F5F2EB]/10">
+      <div className="flex items-center gap-1 bg-[#0D0F14] p-0.5 rounded-xl border border-[#F5F2EB]/10 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => onChangeMode('wait_mode')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
             mode === 'wait_mode'
               ? 'bg-[#38BDF8]/20 text-[#38BDF8] border border-[#38BDF8]/40'
               : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
           }`}
           title="Wait Mode: The score pauses at each note and waits for you to play the right key"
         >
-          Wait Mode (Step-by-Step)
+          <span className="hidden xl:inline">Wait Mode (Step-by-Step)</span>
+          <span className="xl:hidden">Wait Mode</span>
         </button>
 
         <button
           type="button"
           onClick={() => onChangeMode('slow_practice')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
             mode === 'slow_practice'
               ? 'bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40'
               : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
@@ -158,7 +157,7 @@ export const TransportControlBar: React.FC<TransportControlBarProps> = ({
         <button
           type="button"
           onClick={() => onChangeMode('performance')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
             mode === 'performance'
               ? 'bg-[#E5A93C]/20 text-[#E5A93C] border border-[#E5A93C]/40'
               : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
@@ -171,21 +170,20 @@ export const TransportControlBar: React.FC<TransportControlBarProps> = ({
         <button
           type="button"
           onClick={() => onChangeMode('auto_demo')}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+          className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
             mode === 'auto_demo'
               ? 'bg-[#818CF8]/20 text-[#818CF8] border border-[#818CF8]/40'
               : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
           }`}
           title="Listen & Watch Demo: App plays the piece while showing Overhead Hands and Keys"
         >
-          <Ear className="w-3.5 h-3.5" />
+          <Ear className="w-3.5 h-3.5 shrink-0" />
           <span>Listen Demo</span>
         </button>
       </div>
 
       {/* Right: Tempo, Hand Filter, Visualizer View, & Fix-Me Coach Trigger */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Tempo Control */}
+      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
         <div className="flex items-center gap-1.5 bg-[#0D0F14] px-2.5 py-1 rounded-lg border border-[#F5F2EB]/10">
           <span className="font-tabular text-xs font-bold text-[#E5A93C]">
             {Math.round(effectiveBpm)} BPM
@@ -325,30 +323,20 @@ export const TransportControlBar: React.FC<TransportControlBarProps> = ({
           <span className="hidden xl:inline">Hands</span>
         </button>
 
-        {/* "Identify My Play & Fix Me" Coach Button */}
+        {/* Compact "Fix Play" Coach Button */}
         <button
           type="button"
           onClick={onOpenFixMeCoach}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-[#F59E0B]/20 to-[#F43F5E]/20 hover:from-[#F59E0B]/30 hover:to-[#F43F5E]/30 text-[#F5F2EB] border border-[#F59E0B]/50 transition-all"
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-[#F59E0B]/20 to-[#F43F5E]/20 hover:from-[#F59E0B]/30 hover:to-[#F43F5E]/30 text-[#F5F2EB] border border-[#F59E0B]/50 transition-all whitespace-nowrap"
           title="Open 'Identify My Play & Fix Me' Diagnostic Coach & Targeted Bar Remediation"
         >
-          <Wrench className="w-3.5 h-3.5 text-[#F59E0B]" />
-          <span>Fix My Play</span>
+          <Wrench className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
+          <span>Fix Play</span>
           {troubleMeasuresCount > 0 && (
             <span className="px-1.5 py-0.2 rounded-full text-[10px] font-tabular font-bold bg-[#F43F5E] text-white">
               {troubleMeasuresCount}
             </span>
           )}
-        </button>
-
-        {/* Contextual Video Coach Button */}
-        <button
-          type="button"
-          onClick={onOpenVideoCoach}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1E2230] hover:bg-[#282D3E] text-[#10B981] border border-[#10B981]/40 transition-colors"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          <span>Lesson Video</span>
         </button>
       </div>
     </div>

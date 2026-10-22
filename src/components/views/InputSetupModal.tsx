@@ -193,7 +193,7 @@ export const InputSetupModal: React.FC<InputSetupModalProps> = ({
             )}
 
             {/* Sensitivity slider */}
-            <div className="flex items-center justify-between gap-4 pt-1">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 pt-1">
               <label htmlFor="mic-gate-slider" className="text-xs text-[#B8B2A6]">
                 Noise Gate Sensitivity (lower = more sensitive to soft notes):
               </label>
@@ -207,7 +207,7 @@ export const InputSetupModal: React.FC<InputSetupModalProps> = ({
                 onChange={(e) =>
                   onUpdateMicConfig({ rmsThreshold: parseFloat(e.target.value) })
                 }
-                className="w-44 accent-[#E5A93C]"
+                className="w-full sm:w-44 accent-[#E5A93C]"
               />
             </div>
           </section>

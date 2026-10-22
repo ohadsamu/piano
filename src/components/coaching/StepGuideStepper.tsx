@@ -77,22 +77,20 @@ export const StepGuideStepper: React.FC<StepGuideStepperProps> = ({
   const currentStep =
     steps[Math.min(Math.max(0, resolvedIndex), Math.max(0, steps.length - 1))];
 
-  const isStepDone = (idx: number, step: LessonStep): boolean => {
-    if (completedStepIndices.includes(idx)) return true;
-    if (completedStepIds.includes(step.id)) return true;
-    return idx < resolvedIndex;
-  };
-
   return (
     <div
-      className={`w-full bg-[#161922] border-b border-white/10 px-3 sm:px-5 py-2.5 flex flex-col gap-2 ${className}`}
+      className={`w-full ${
+        compact
+          ? 'bg-transparent border-0 px-0 py-0'
+          : 'bg-[#161922] border-b border-white/10 px-3 sm:px-5 py-2.5'
+      } flex flex-col gap-2 ${className}`}
     >
       {/* Top Row: 5-Step Pedagogical Progression Track */}
       <div className="flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
         <div className="flex items-center gap-1 sm:gap-1.5">
           {steps.map((step, idx) => {
             const isActive = idx === resolvedIndex;
-            const isDone = isStepDone(idx, step);
+            const isDone = completedStepIndices.includes(idx) || completedStepIds.includes(step.id);
             const shortLabel = STEP_SHORT_LABELS[step.type] ?? step.title;
 
             return (

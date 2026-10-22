@@ -333,8 +333,20 @@ export const App: React.FC = () => {
 
     if (activeStepIndex + 1 < activeLesson.steps.length) {
       handleSelectStep(activeStepIndex + 1);
+    } else {
+      const currentLessonIdx = CURRICULUM_LESSONS.findIndex(
+        (l) => l.id === activeLesson.id
+      );
+      if (
+        currentLessonIdx >= 0 &&
+        currentLessonIdx + 1 < CURRICULUM_LESSONS.length
+      ) {
+        handleSelectLesson(CURRICULUM_LESSONS[currentLessonIdx + 1].id, 0);
+      } else {
+        setActiveTab('curriculum');
+      }
     }
-  }, [activeLesson, activeStepIndex, handleSelectStep]);
+  }, [activeLesson, activeStepIndex, handleSelectStep, handleSelectLesson]);
 
   const handleSelectSong = useCallback(
     (songId: string | null) => {
@@ -524,11 +536,39 @@ export const App: React.FC = () => {
             diagnosisReport={diagnosisReport}
             activeVideo={activeVideoForLesson}
             lastNoteInput={lastNoteInput}
+            micActive={micTelemetry.active}
+            midiConnected={midiDevices.some((d) => d.connected)}
+            onToggleMic={handleToggleMic}
             onSelectLesson={handleSelectLesson}
             onSelectSong={handleSelectSong}
             onSelectStep={handleSelectStep}
             onAdvanceNextStep={handleAdvanceNextStep}
             onChangeMode={(mode) => {
+              if (!activeSongId) {
+                const targetStepType =
+                  mode === 'key_discovery'
+                    ? 'key_discovery'
+                    : mode === 'wait_mode'
+                    ? 'wait_mode'
+                    : mode === 'slow_practice'
+                    ? 'slow_flow'
+                    : mode === 'performance'
+                    ? 'stage_performance'
+                    : null;
+                if (targetStepType) {
+                  const matchedIdx = activeLesson.steps.findIndex(
+                    (s) => s.type === targetStepType
+                  );
+                  if (matchedIdx !== -1 && matchedIdx !== activeStepIndex) {
+                    setActiveStepIndex(matchedIdx);
+                    practiceEngineRef.current?.startPractice(mode, {
+                      lessonStep: activeLesson.steps[matchedIdx],
+                      AutoStart: true,
+                    });
+                    return;
+                  }
+                }
+              }
               practiceEngineRef.current?.startPractice(mode, { AutoStart: true });
             }}
             onChangeVisualizerMode={setVisualizerMode}
@@ -687,6 +727,15 @@ export const App: React.FC = () => {
             AutoStart: true,
           });
         }}
+        onNextStepOrLesson={() => {
+          setIsFixMeModalOpen(false);
+          handleAdvanceNextStep();
+        }}
+        nextStepLabel={
+          activeStepIndex < activeLesson.steps.length - 1
+            ? 'Continue to Next Step →'
+            : 'Complete Unit & Next Lesson →'
+        }
       />
 
       {/* Contextual Video Coach Slide-Over Drawer */}

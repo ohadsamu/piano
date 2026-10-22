@@ -119,16 +119,41 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
     const viewWidth = container.clientWidth;
     if (viewWidth <= 0) return;
 
+    if (currentBeat <= 0.05) {
+      if (container.scrollLeft > 4) {
+        container.scrollTo({
+          left: 0,
+          behavior: 'smooth',
+        });
+      }
+      return;
+    }
+
     const targetScrollLeft = Math.max(0, playheadX - viewWidth * 0.38);
     const diff = Math.abs(container.scrollLeft - targetScrollLeft);
-    if (diff > viewWidth * 0.22 || playheadX < container.scrollLeft + 60) {
+    if (diff > viewWidth * 0.18 || playheadX < container.scrollLeft + 60) {
       container.scrollTo({
         left: targetScrollLeft,
-        behavior: diff > viewWidth ? 'auto' : 'smooth',
+        behavior: 'smooth',
       });
     }
-  }, [playheadX]);
+  }, [playheadX, currentBeat]);
 
+  const completedNotesCount = useMemo(() => {
+    return score.notes.reduce((count, note) => {
+      const status = noteStatuses[note.id];
+      if (status === 'correct_first_try' || status === 'correct_after_hint') {
+        return count + 1;
+      }
+      return count;
+    }, 0);
+  }, [score.notes, noteStatuses]);
+
+  const totalNotesCount = score.notes.length;
+  const progressPct =
+    totalNotesCount > 0
+      ? Math.round((completedNotesCount / totalNotesCount) * 100)
+      : 0;
   const isParchment = theme === 'parchment';
   const bgSurface = isParchment ? '#FAF6EE' : '#12151E';
   const staffLineColor = isParchment
@@ -167,7 +192,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
     >
       {/* Top Engraving Header Bar */}
       <div
-        className="flex items-center justify-between px-4 py-1.5 border-b text-xs"
+        className="relative flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-2.5 sm:px-4 py-1.5 border-b text-xs"
         style={{
           borderColor: isParchment
             ? 'rgba(24, 24, 27, 0.1)'
@@ -177,15 +202,15 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
             : 'rgba(13, 15, 20, 0.65)',
         }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 min-w-0">
           <span
-            className="font-editorial font-semibold tracking-tight text-sm"
+            className="font-editorial font-semibold tracking-tight text-xs sm:text-sm truncate max-w-[160px] sm:max-w-none"
             style={{ color: defaultInk }}
           >
             {score.title}
           </span>
           <span
-            className="font-tabular text-[11px] px-2 py-0.5 rounded border"
+            className="font-tabular text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded border whitespace-nowrap"
             style={{
               color: isParchment ? '#78350F' : '#E5A93C',
               borderColor: 'rgba(229, 169, 60, 0.35)',
@@ -195,8 +220,35 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
             {score.timeSignature[0]}/{score.timeSignature[1]} · Key of{' '}
             {score.keySignature} · {score.bpm} BPM
           </span>
+          <span
+            className="font-tabular text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded border font-semibold whitespace-nowrap"
+            style={{
+              color:
+                progressPct === 100
+                  ? isParchment
+                    ? '#065F46'
+                    : '#10B981'
+                  : isParchment
+                  ? '#18181B'
+                  : '#F5F2EB',
+              borderColor:
+                progressPct === 100
+                  ? 'rgba(16, 185, 129, 0.45)'
+                  : isParchment
+                  ? 'rgba(24, 24, 27, 0.18)'
+                  : 'rgba(245, 242, 235, 0.16)',
+              backgroundColor:
+                progressPct === 100
+                  ? 'rgba(16, 185, 129, 0.14)'
+                  : isParchment
+                  ? 'rgba(24, 24, 27, 0.05)'
+                  : 'rgba(255, 255, 255, 0.06)',
+            }}
+          >
+            Progress: {completedNotesCount}/{totalNotesCount} notes ({progressPct}%)
+          </span>
           {loopRange && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#E5A93C]/20 text-[#E5A93C] font-tabular text-[11px] font-semibold">
+            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded bg-[#E5A93C]/20 text-[#E5A93C] font-tabular text-[10px] sm:text-[11px] font-semibold whitespace-nowrap">
               <Repeat className="w-3 h-3" />
               Looping Bars {loopRange[0] + 1}–{loopRange[1] + 1}
             </span>
@@ -212,7 +264,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                   onSelectMeasure?.(firstTrouble);
                 }
               }}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#F43F5E]/20 hover:bg-[#F43F5E]/30 border border-[#F43F5E]/50 text-[#F43F5E] font-tabular text-[11px] font-semibold transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#F43F5E]/20 hover:bg-[#F43F5E]/30 border border-[#F43F5E]/50 text-[#F43F5E] font-tabular text-[10px] sm:text-[11px] font-semibold transition-colors whitespace-nowrap"
             >
               <AlertTriangle className="w-3 h-3" />
               <span>
@@ -224,8 +276,8 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
         </div>
 
         {/* Legend & Urtext/Stage Theme Switcher */}
-        <div className="flex items-center gap-3">
-          <div className="hidden md:flex items-center gap-2.5 text-[11px]">
+        <div className="flex items-center gap-2 sm:gap-3 ml-auto">
+          <div className="hidden lg:flex items-center gap-2.5 text-[11px]">
             <span className="inline-flex items-center gap-1" style={{ color: mutedText }}>
               <span className="w-2 h-2 rounded-full bg-[#38BDF8]" /> First-Try
             </span>
@@ -242,7 +294,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
             onClick={() =>
               setTheme((prev) => (prev === 'stage' ? 'parchment' : 'stage'))
             }
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border transition-colors"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium border transition-colors whitespace-nowrap"
             style={{
               color: defaultInk,
               borderColor: isParchment
@@ -266,6 +318,16 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
               </>
             )}
           </button>
+        </div>
+
+        {/* 2px Sleek Bottom Progress Bar */}
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-[2px] bg-black/20 overflow-hidden">
+          <div
+            className={`h-full transition-all duration-300 ${
+              progressPct === 100 ? 'bg-[#10B981]' : 'bg-[#E5A93C]'
+            }`}
+            style={{ width: `${progressPct}%` }}
+          />
         </div>
       </div>
 
@@ -593,6 +655,19 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
               clef === 'treble' ? dStep >= 6 : dStep >= -6;
             const stemX = stemDown ? cx - 6 : cx + 6;
             const stemY2 = stemDown ? cy + 30 : cy - 30;
+            const fingerX = chordSiblings.length > 1 ? cx - 14 : cx;
+            const fingerY =
+              chordSiblings.length > 1
+                ? cy + 3.5
+                : clef === 'treble'
+                ? cy - 12
+                : cy + 19;
+
+            const pillOffsetX =
+              chordSiblings.length > 1
+                ? (chordIdx - (chordSiblings.length - 1) / 2) * 25
+                : 0;
+            const pillY = clef === 'treble' ? Math.max(125, cy + 10) : 210;
 
             return (
               <g
@@ -619,14 +694,14 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                   <circle
                     cx={cx}
                     cy={cy}
-                    r={13}
+                    r={16}
                     fill={
                       isHint
                         ? 'rgba(245, 158, 11, 0.24)'
                         : 'rgba(229, 169, 60, 0.22)'
                     }
                     stroke={isHint ? '#F59E0B' : '#E5A93C'}
-                    strokeWidth={1.2}
+                    strokeWidth={1.8}
                   />
                 )}
 
@@ -681,8 +756,8 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                     d={
                       stemDown
                         ? `M ${stemX} ${stemY2} Q ${stemX + 9} ${
-                            stemY2 + 6
-                          }, ${stemX + 7} ${stemY2 + 15}`
+                            stemY2 - 6
+                          }, ${stemX + 7} ${stemY2 - 15}`
                         : `M ${stemX} ${stemY2} Q ${stemX + 9} ${
                             stemY2 + 6
                           }, ${stemX + 7} ${stemY2 + 15}`
@@ -716,43 +791,44 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
 
                 {/* Finger Number Badge (1–5) */}
                 {showFingerNumbers && (
-                  <text
-                    x={
-                      chordSiblings.length > 1
-                        ? cx - 14
-                        : cx
-                    }
-                    y={
-                      chordSiblings.length > 1
-                        ? cy + 3.5
-                        : clef === 'treble'
-                        ? cy - 12
-                        : cy + 19
-                    }
-                    textAnchor="middle"
-                    fill={
-                      isTarget || isHint
-                        ? '#E5A93C'
-                        : note.hand === 'left'
-                        ? '#818CF8'
-                        : '#38BDF8'
-                    }
-                    fontSize={10}
-                    fontWeight={700}
-                    fontFamily='"JetBrains Mono", monospace'
-                  >
-                    {note.finger}
-                  </text>
+                  <g>
+                    <circle
+                      cx={fingerX}
+                      cy={fingerY - 3.5}
+                      r={7.5}
+                      fill={isParchment ? '#FAF6EE' : '#12151E'}
+                      stroke={noteColor}
+                      strokeOpacity={0.35}
+                      strokeWidth={1}
+                    />
+                    <text
+                      x={fingerX}
+                      y={fingerY}
+                      textAnchor="middle"
+                      fill={
+                        isTarget || isHint
+                          ? '#E5A93C'
+                          : note.hand === 'left'
+                          ? '#818CF8'
+                          : '#38BDF8'
+                      }
+                      fontSize={isTarget ? 12 : 11}
+                      fontWeight={700}
+                      fontFamily='"JetBrains Mono", monospace'
+                    >
+                      {note.finger}
+                    </text>
+                  </g>
                 )}
 
                 {/* Beginner Note Name Pill below/beside note (stacked cleanly for chords) */}
                 {showNoteNames && (
                   <g>
                     <rect
-                      x={cx - 11 + (chordSiblings.length > 1 ? (chordIdx - (chordSiblings.length - 1) / 2) * 23 : 0)}
-                      y={clef === 'treble' ? 124 : 210}
-                      width={21}
-                      height={13}
+                      x={cx - 12 + pillOffsetX}
+                      y={pillY}
+                      width={24}
+                      height={15}
                       rx={3}
                       fill={
                         isTarget || isHint
@@ -763,8 +839,8 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                       }
                     />
                     <text
-                      x={cx + (chordSiblings.length > 1 ? (chordIdx - (chordSiblings.length - 1) / 2) * 23 : 0)}
-                      y={clef === 'treble' ? 133.5 : 219.5}
+                      x={cx + pillOffsetX}
+                      y={pillY + 10.5}
                       textAnchor="middle"
                       fill={
                         isTarget || isHint
@@ -773,7 +849,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                           ? '#18181B'
                           : '#F5F2EB'
                       }
-                      fontSize={8.5}
+                      fontSize={10}
                       fontWeight={700}
                       fontFamily='"JetBrains Mono", monospace'
                     >
@@ -781,7 +857,6 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                     </text>
                   </g>
                 )}
-
                 {/* Lyric / Solfege / Pedagogical Label if present */}
                 {note.lyric && (clef === 'treble' ? isBottomOfChord : isTopOfChord) && (
                   <text

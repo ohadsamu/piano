@@ -248,7 +248,7 @@ export const OverheadHandGuide: React.FC<OverheadHandGuideProps> = ({
         {/* Translucent Top-Down Articulated Hand Arch SVG */}
         <svg
           viewBox="0 0 200 92"
-          className="w-full h-16 sm:h-20 overflow-visible drop-shadow-md"
+          className="w-full h-14 sm:h-16 overflow-visible drop-shadow-md"
           aria-label={`${isRight ? 'Right' : 'Left'} Hand Finger Guide`}
         >
           {/* Soft Translucent Palm Arch */}

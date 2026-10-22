@@ -302,24 +302,24 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
       />
 
       {/* Directional Correction Overlay Bridge (when user struck a wrong note) */}
-      {directionalGuide && !compact && (
-        <div className="pointer-events-none absolute -top-8 left-0 right-0 h-8 z-30 overflow-visible">
+      {directionalGuide && !compact && !standMode && (
+        <div className="pointer-events-none absolute top-1.5 left-0 right-0 h-8 z-30 overflow-visible px-1">
           <div
-            className="absolute top-1 flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide shadow-lg border transition-all duration-150"
+            className="absolute top-0 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-[11px] font-semibold tracking-wide shadow-lg border transition-all duration-150 whitespace-nowrap"
             style={{
               left: `${Math.min(
-                88,
-                Math.max(12, (directionalGuide.fromCenterPct + directionalGuide.toCenterPct) / 2)
+                84,
+                Math.max(16, (directionalGuide.fromCenterPct + directionalGuide.toCenterPct) / 2)
               )}%`,
               transform: 'translateX(-50%)',
-              backgroundColor: 'rgba(22, 25, 34, 0.95)',
+              backgroundColor: 'rgba(13, 15, 20, 0.96)',
               borderColor: '#F59E0B',
               color: '#F5F2EB',
             }}
           >
             {directionalGuide.direction === 'left' ? (
               <>
-                <ArrowLeft className="w-3.5 h-3.5 text-[#F59E0B] animate-pulse" />
+                <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#F59E0B] animate-pulse shrink-0" />
                 <span className="text-[#F59E0B] font-tabular">
                   ← Target {directionalGuide.targetNoteName}
                 </span>
@@ -329,18 +329,17 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
                 <span className="text-[#F59E0B] font-tabular">
                   Target {directionalGuide.targetNoteName} →
                 </span>
-                <ArrowRight className="w-3.5 h-3.5 text-[#F59E0B] animate-pulse" />
+                <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#F59E0B] animate-pulse shrink-0" />
               </>
             )}
             {directionalGuide.finger && (
-              <span className="ml-1 px-1.5 py-0.2 rounded bg-[#F59E0B]/20 text-[#F59E0B] font-tabular text-[10px]">
+              <span className="hidden sm:inline ml-1 px-1.5 py-0.2 rounded bg-[#F59E0B]/20 text-[#F59E0B] font-tabular text-[10px]">
                 Finger {directionalGuide.finger}
               </span>
             )}
           </div>
         </div>
       )}
-
       {/* Keybed Container */}
       <div className={`relative w-full ${heightClass} bg-[#090B0F] overflow-hidden`}>
         {/* White Keys Layer */}
@@ -486,7 +485,7 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
               {/* Scientific Pitch Name (C4, D4, etc.) */}
               {showNoteNames && (
                 <span
-                  className={`font-tabular text-[10px] sm:text-[11px] font-bold leading-none ${
+                  className={`font-tabular text-[9px] sm:text-[11px] font-bold leading-none ${
                     state.isMiddleC ? 'underline decoration-[#D97706] decoration-2' : ''
                   }`}
                 >
@@ -495,8 +494,8 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
               )}
 
               {/* QWERTY Computer Keyboard Shortcut Badge */}
-              {showQwertyLabels && key.qwertyLabel && !compact && (
-                <span className="mt-1 px-1 py-[1px] rounded bg-black/10 text-[9px] font-tabular font-medium opacity-65 leading-none">
+              {showQwertyLabels && key.qwertyLabel && !compact && !standMode && (
+                <span className="hidden sm:inline-block mt-1 px-1 py-[1px] rounded bg-black/10 text-[9px] font-tabular font-medium opacity-65 leading-none">
                   [{key.qwertyLabel}]
                 </span>
               )}
@@ -604,14 +603,14 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
 
               {/* Note Name on Black Key */}
               {showNoteNames && !compact && (
-                <span className="font-tabular text-[9px] font-semibold leading-none opacity-90">
+                <span className="hidden sm:inline font-tabular text-[9px] font-semibold leading-none opacity-90">
                   {key.noteName}
                 </span>
               )}
 
               {/* QWERTY Label on Black Key */}
-              {showQwertyLabels && key.qwertyLabel && !compact && (
-                <span className="mt-0.5 text-[8px] font-tabular opacity-60 leading-none">
+              {showQwertyLabels && key.qwertyLabel && !compact && !standMode && (
+                <span className="hidden md:inline mt-0.5 text-[8px] font-tabular opacity-60 leading-none">
                   [{key.qwertyLabel}]
                 </span>
               )}
