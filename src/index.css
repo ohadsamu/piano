@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-ebony-void: #090B0F;
+  --bg-ebony-lacquer: #0D0F14;
+  --bg-spruce-panel: #161922;
+  --bg-iron-surface: #1E2230;
+  --bg-glass-overlay: rgba(22, 25, 34, 0.88);
+
+  --piano-felt-crimson: #9F1239;
+  --piano-ivory-top: #FBF9F5;
+  --piano-ivory-front: #E6E0D4;
+  --piano-ebony-key: #181A20;
+  --piano-ebony-highlight: #2C303C;
+
+  --score-parchment-bg: #FAF6EE;
+  --score-parchment-ink: #18181B;
+  --score-stage-bg: #12151E;
+  --score-stage-lines: rgba(234, 227, 210, 0.28);
+  --score-stage-ink: #F5F0E6;
+
+  --text-ivory-primary: #F5F2EB;
+  --text-warm-secondary: #B8B2A6;
+  --text-muted-slate: #7D8494;
+
+  --accent-brass: #E5A93C;
+  --accent-brass-soft: rgba(229, 169, 60, 0.16);
+  --border-hairline: rgba(245, 242, 235, 0.09);
+  --border-brass-active: rgba(229, 169, 60, 0.55);
+
+  --eval-first-try-blue: #38BDF8;
+  --eval-stage-emerald: #10B981;
+  --eval-stage-emerald-bright: #22C55E;
+  --eval-hint-amber: #F59E0B;
+  --eval-error-coral: #F43F5E;
+  --eval-detected-ghost: #64748B;
+
+  --hand-right-sky: #38BDF8;
+  --hand-left-indigo: #818CF8;
+  --path-soloist-blue: #38BDF8;
+  --path-chords-rose: #EC4899;
+  --path-synthesis-gold: #E5A93C;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-ebony-lacquer);
+  color: var(--text-ivory-primary);
+  overflow-x: hidden;
+}
+
+.font-editorial {
+  font-family: 'Fraunces', Georgia, serif;
+}
+
+.font-tabular {
+  font-family: 'JetBrains Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom subtle scrollbars for studio drawers */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0D0F14;
+}
+::-webkit-scrollbar-thumb {
+  background: #282D3E;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #E5A93C;
+}
