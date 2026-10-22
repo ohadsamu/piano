@@ -19,6 +19,7 @@ import type {
   CoachDiagnosisReport,
   Hand,
   Lesson,
+  LiveMicTelemetry,
   NoteInputEvent,
   PracticeMode,
   PracticeSessionSnapshot,
@@ -50,6 +51,7 @@ interface PracticeStudioViewProps {
   activeVideo: VideoLesson;
   lastNoteInput: NoteInputEvent | null;
   micActive?: boolean;
+  micTelemetry?: LiveMicTelemetry;
   midiConnected?: boolean;
   onToggleMic?: () => void;
   onSelectLesson: (lessonId: string, stepIndex?: number) => void;
@@ -90,6 +92,7 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
   activeVideo,
   lastNoteInput,
   micActive,
+  micTelemetry,
   midiConnected,
   onToggleMic,
   onSelectLesson,
@@ -115,11 +118,9 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
   onOpenFixMeModal,
   onOpenVideoDrawer,
 }) => {
-  // Auto-enable Electric Piano Music Stand Mode on smartphone/tablet widths (< 960px)
-  const [standMode, setStandMode] = useState<boolean>(() =>
-    typeof window !== 'undefined' ? window.innerWidth < 960 : false
-  );
-
+  // Default to Electric Piano Stand Mode with the on-screen UI piano hidden by default
+  const [standMode, setStandMode] = useState<boolean>(true);
+  const [hideUiKeyboard, setHideUiKeyboard] = useState<boolean>(true);
   useEffect(() => {
     void requestMusicStandWakeLock();
   }, []);
@@ -509,6 +510,131 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
       )}
       {/* Main Interactive Workspace */}
       <div className="flex-1 max-w-[1600px] w-full mx-auto px-2.5 sm:px-4 py-2 flex flex-col justify-between gap-2">
+        {/* Real Electric Piano Live Listener & Real-Time Coach HUD */}
+        <div
+          className={`rounded-2xl border p-3.5 sm:p-4 transition-all ${
+            micActive || midiConnected
+              ? 'bg-[#111918] border-[#10B981]/60 shadow-[0_0_24px_rgba(16,185,129,0.15)]'
+              : 'bg-gradient-to-r from-[#161922] via-[#1B222C] to-[#161922] border-[#10B981]/50 shadow-lg'
+          }`}
+        >
+          {!(micActive || midiConnected) ? (
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40">
+                    Real Electric Piano Mode (No On-Screen Piano Needed)
+                  </span>
+                </div>
+                <h2 className="font-editorial text-base sm:text-lg font-semibold text-[#F5F2EB]">
+                  Play on your physical E-Piano while this screen listens &amp; coaches you in real time
+                </h2>
+                <p className="text-xs text-[#B8B2A6]">
+                  1. Tap <strong className="text-[#10B981]">Start Listening to My E-Piano</strong> below &rarr; 2. Play the highlighted note on your real electric piano &rarr; 3. If you hit a wrong key, the banner tells you how many keys left/right to move.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                {onToggleMic && (
+                  <button
+                    type="button"
+                    onClick={onToggleMic}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-[#090B0F] font-bold text-xs sm:text-sm shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all"
+                  >
+                    <span>🎤 Start Listening to My E-Piano</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setHideUiKeyboard((v) => !v)}
+                  className="px-3 py-2 rounded-xl bg-[#0D0F14] hover:bg-[#1E2230] text-xs font-semibold text-[#B8B2A6] border border-[#F5F2EB]/15"
+                >
+                  {hideUiKeyboard ? 'Show Key Landmark Diagram' : 'Hide On-Screen Piano'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0D0F14] border border-[#10B981]/50">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#10B981]" />
+                  </span>
+                  <span className="text-xs font-bold text-[#10B981] tracking-wide uppercase">
+                    {midiConnected ? 'USB-MIDI E-Piano Active' : 'Listening to Your E-Piano'}
+                  </span>
+                  {micTelemetry && (
+                    <div
+                      className="w-16 h-2 rounded-full bg-[#161922] overflow-hidden border border-white/10"
+                      title="Live Microphone Volume Level"
+                    >
+                      <div
+                        className="h-full bg-[#10B981] transition-all duration-75"
+                        style={{
+                          width: `${Math.min(100, Math.round((micTelemetry.rmsLevel || 0) * 900))}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                {/* Live Note Heard from Physical E-Piano */}
+                <div className="px-3 py-1.5 rounded-xl bg-[#0D0F14] border border-[#F5F2EB]/15 text-xs font-tabular">
+                  <span className="text-[#B8B2A6]">Heard from E-Piano: </span>
+                  {micTelemetry?.detectedNoteName ? (
+                    <strong className="text-[#10B981] text-sm">
+                      {micTelemetry.detectedNoteName}{' '}
+                      <span className="text-[11px] text-[#B8B2A6]">
+                        ({Math.round(micTelemetry.frequencyHz ?? 0)} Hz)
+                      </span>
+                    </strong>
+                  ) : lastNoteInput ? (
+                    <strong className="text-[#38BDF8] text-sm">
+                      {lastNoteInput.noteName} ({Math.round(lastNoteInput.frequencyHz)} Hz)
+                    </strong>
+                  ) : (
+                    <span className="text-[#E5A93C] font-semibold">
+                      Play the target note on your e-piano...
+                    </span>
+                  )}
+                </div>
+
+                {/* Target Note on Sheet */}
+                {activeTargetNotes.length > 0 && (
+                  <div className="px-3 py-1.5 rounded-xl bg-[#0D0F14] border border-[#38BDF8]/40 text-xs font-tabular">
+                    <span className="text-[#B8B2A6]">Target on E-Piano: </span>
+                    <strong className="text-[#38BDF8] text-sm">
+                      {activeTargetNotes
+                        .map(
+                          (n) =>
+                            `${n.noteName} (${n.hand === 'right' ? 'RH' : 'LH'} Finger ${n.finger})`
+                        )
+                        .join(' + ')}
+                    </strong>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={onOpenFixMeModal}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#F59E0B]/20 hover:bg-[#F59E0B]/30 text-xs font-semibold text-[#F59E0B] border border-[#F59E0B]/40"
+                >
+                  <Wrench className="w-3.5 h-3.5" />
+                  <span>Diagnose &amp; Fix My Play</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHideUiKeyboard((v) => !v)}
+                  className="px-3 py-1.5 rounded-xl bg-[#0D0F14] hover:bg-[#1E2230] text-xs font-semibold text-[#B8B2A6] border border-[#F5F2EB]/15"
+                >
+                  {hideUiKeyboard ? 'Show Key Landmark Diagram' : 'Hide On-Screen Piano'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
         {/* Rewarding Step / Piece Complete Celebration Banner */}
         {snapshot.isCompleted && (
           <div className="border-2 border-[#10B981] bg-gradient-to-r from-[#161922] via-[#1A2421] to-[#161922] rounded-2xl p-3.5 sm:p-4 shadow-[0_12px_36px_rgba(16,185,129,0.2)] flex flex-col lg:flex-row lg:items-center justify-between gap-3">
@@ -792,38 +918,47 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
                 </div>
               )}
 
-              {/* Interactive 3-Octave Concert Grand Piano Keybed (or Slim Stand Reference Strip) */}
-              <div className="relative rounded-b-2xl border border-[#F5F2EB]/15 shadow-2xl bg-[#090B0F]">
-                {standMode && (
+              {/* Optional Key Landmark Diagram (Hidden by default since you play on your physical E-Piano) */}
+              {!hideUiKeyboard && (
+                <div className="relative rounded-b-2xl border border-[#F5F2EB]/15 shadow-2xl bg-[#090B0F]">
                   <div className="px-3 py-1 bg-[#12151E] border-b border-[#F5F2EB]/10 flex flex-wrap items-center justify-between gap-2 text-[11px]">
                     <span className="text-[#10B981] font-semibold">
-                      🎹 Electric Piano Stand Strip • Play on your physical keys (C4 Crown = Middle C • Amber = Hint • Coral = Wrong Key)
+                      🎹 Physical E-Piano Reference Map (C4 Crown = Middle C • Sky Blue = Target • Coral = Wrong Key)
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => setStandMode(false)}
-                      className="text-[#38BDF8] hover:underline font-semibold shrink-0"
-                    >
-                      Expand Full Keys
-                    </button>
+                    <div className="flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setStandMode((s) => !s)}
+                        className="text-[#38BDF8] hover:underline font-semibold"
+                      >
+                        {standMode ? 'Expand Diagram' : 'Compact Strip'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setHideUiKeyboard(true)}
+                        className="text-[#F43F5E] hover:underline font-semibold"
+                      >
+                        Hide Diagram
+                      </button>
+                    </div>
                   </div>
-                )}
 
-                <InteractiveKeyboard
-                  standMode={standMode}
-                  currentlyHeldMidis={snapshot.currentlyHeldMidis}
-                  activeTargetMidis={snapshot.activeTargetMidis}
-                  activeTargetNotes={activeTargetNotes}
-                  hintedMidis={snapshot.hintedMidis}
-                  wrongPlayedMidis={snapshot.wrongPlayedMidis}
-                  liveCorrection={snapshot.liveCorrection}
-                  showNoteNames={snapshot.showNoteNames}
-                  showFingerNumbers={snapshot.showFingerNumbers}
-                  showQwertyLabels={!standMode}
-                  onNoteOn={onVirtualNoteOn}
-                  onNoteOff={onVirtualNoteOff}
-                />
-              </div>
+                  <InteractiveKeyboard
+                    standMode={standMode}
+                    currentlyHeldMidis={snapshot.currentlyHeldMidis}
+                    activeTargetMidis={snapshot.activeTargetMidis}
+                    activeTargetNotes={activeTargetNotes}
+                    hintedMidis={snapshot.hintedMidis}
+                    wrongPlayedMidis={snapshot.wrongPlayedMidis}
+                    liveCorrection={snapshot.liveCorrection}
+                    showNoteNames={snapshot.showNoteNames}
+                    showFingerNumbers={snapshot.showFingerNumbers}
+                    showQwertyLabels={false}
+                    onNoteOn={onVirtualNoteOn}
+                    onNoteOff={onVirtualNoteOff}
+                  />
+                </div>
+              )}
             </div>
           </>
         )}

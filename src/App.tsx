@@ -537,6 +537,7 @@ export const App: React.FC = () => {
             activeVideo={activeVideoForLesson}
             lastNoteInput={lastNoteInput}
             micActive={micTelemetry.active}
+            micTelemetry={micTelemetry}
             midiConnected={midiDevices.some((d) => d.connected)}
             onToggleMic={handleToggleMic}
             onSelectLesson={handleSelectLesson}

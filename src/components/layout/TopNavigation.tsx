@@ -196,7 +196,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
             <span className="hidden xl:inline">
               {connectedMidi.length > 0
                 ? `MIDI: ${connectedMidi[0].name}`
-                : 'QWERTY & Touch Ready'}
+                : 'E-Piano Mic & MIDI Setup'}
             </span>
             <Sliders className="hidden sm:block w-3 h-3 text-[#7D8494]" />
           </button>
