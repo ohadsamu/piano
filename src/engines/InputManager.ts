@@ -199,6 +199,10 @@ export class InputManager {
     return this.micDetector.getTelemetry();
   }
 
+  public setExpectedTargetMidis(midis: number[]): void {
+    this.micDetector.setExpectedTargetMidis(midis);
+  }
+
   public setMicSynthMonitor(enabled: boolean): void {
     this.micSynthMonitor = enabled;
   }

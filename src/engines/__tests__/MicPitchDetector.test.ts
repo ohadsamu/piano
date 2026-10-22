@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { estimatePitchYIN } from '../MicPitchDetector';
+import { estimatePitchYIN, estimatePolyphonicChords } from '../MicPitchDetector';
+import { midiToFrequency } from '../../utils/midiUtils';
 import { MidiInputAdapter } from '../MidiInputAdapter';
 import { QwertyInputAdapter } from '../QwertyInputAdapter';
 import type { NoteInputEvent } from '../../types';
@@ -155,5 +156,43 @@ describe('MidiInputAdapter & QwertyInputAdapter', () => {
     expect(events[0].midi).toBe(60);
     expect(events[1].type).toBe('note_off');
     expect(events[1].midi).toBe(60);
+  });
+});
+
+describe('estimatePolyphonicChords (Electric Piano Microphone Chord & Two-Hand Detection)', () => {
+  const sampleRate = 44100;
+
+  function createPolyphonicPianoChordBuffer(midis: number[], numSamples = 4096): Float32Array {
+    const combined = new Float32Array(numSamples);
+    for (const midi of midis) {
+      const tone = createPianoToneBuffer(midiToFrequency(midi), sampleRate, numSamples, 0.18);
+      for (let i = 0; i < numSamples; i++) {
+        combined[i] += tone[i];
+      }
+    }
+    return combined;
+  }
+
+  it('accurately detects all 3 notes of a C Major triad (C4 + E4 + G4 = [60, 64, 67])', () => {
+    const buffer = createPolyphonicPianoChordBuffer([60, 64, 67]);
+    const detected = estimatePolyphonicChords(buffer, sampleRate, [60, 64, 67]);
+    const midis = detected.map((d) => d.midi);
+    expect(midis).toEqual([60, 64, 67]);
+  });
+
+  it('accurately detects Two-Hand dyads (Bass C3 + Treble E4 = [48, 64]) without false octave overtone', () => {
+    const buffer = createPolyphonicPianoChordBuffer([48, 64]);
+    const detected = estimatePolyphonicChords(buffer, sampleRate, [48, 64]);
+    const midis = detected.map((d) => d.midi);
+    expect(midis).toContain(48);
+    expect(midis).toContain(64);
+    expect(midis).not.toContain(60); // 2nd harmonic of C3 (C4=60) suppressed by overtone cancellation
+  });
+
+  it('identifies a wrong note inside a played chord (C4 + F4 + G4 when C4 + E4 + G4 was expected)', () => {
+    const buffer = createPolyphonicPianoChordBuffer([60, 65, 67]);
+    const detected = estimatePolyphonicChords(buffer, sampleRate, [60, 64, 67]);
+    const midis = detected.map((d) => d.midi);
+    expect(midis).toEqual([60, 65, 67]);
   });
 });

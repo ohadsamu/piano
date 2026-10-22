@@ -131,6 +131,133 @@ export function estimatePitchYIN(
 }
 
 /**
+ * Computes normalized Hann-windowed Goertzel spectral magnitude at an exact frequency `targetHz`.
+ */
+function computeGoertzelMagnitude(
+  windowedBuffer: Float32Array,
+  sampleRate: number,
+  targetHz: number
+): number {
+  const n = windowedBuffer.length;
+  if (targetHz <= 20 || targetHz >= sampleRate * 0.45) return 0;
+  const omega = (2 * Math.PI * targetHz) / sampleRate;
+  const coeff = 2 * Math.cos(omega);
+  let s1 = 0;
+  let s2 = 0;
+  for (let i = 0; i < n; i++) {
+    const s0 = windowedBuffer[i] + coeff * s1 - s2;
+    s2 = s1;
+    s1 = s0;
+  }
+  const power = s1 * s1 + s2 * s2 - coeff * s1 * s2;
+  return (2 * Math.sqrt(Math.max(0, power))) / n;
+}
+
+/**
+ * Polyphonic Chord & Two-Hand Spectral Detector for Acoustic / Electric Piano over Microphone.
+ * Evaluates exact semitone fundamentals across C3 (48) – B5 (83) with local semitone peak
+ * isolation and overtone subtraction (canceling 2nd/3rd/4th harmonics of lower detected notes).
+ */
+export function estimatePolyphonicChords(
+  buffer: Float32Array,
+  sampleRate: number,
+  expectedMidis: number[] = [],
+  rmsThreshold = DEFAULT_CALIBRATION.rmsThreshold
+): YinPitchEstimate[] {
+  const n = buffer.length;
+  if (n < 512 || sampleRate <= 0) return [];
+
+  let sumSq = 0;
+  for (let i = 0; i < n; i++) {
+    sumSq += buffer[i] * buffer[i];
+  }
+  const rms = Math.sqrt(sumSq / n);
+  if (rms < rmsThreshold) return [];
+
+  // Apply Hann window to suppress spectral leakage between adjacent semitones
+  const windowed = new Float32Array(n);
+  for (let i = 0; i < n; i++) {
+    const w = 0.5 * (1 - Math.cos((2 * Math.PI * i) / (n - 1)));
+    windowed[i] = buffer[i] * w;
+  }
+
+  const minMidi = 48; // C3
+  const maxMidi = 83; // B5
+  const rawFundamental = new Float32Array(maxMidi + 2);
+  const secondHarmonic = new Float32Array(maxMidi + 2);
+
+  for (let m = minMidi - 1; m <= maxMidi + 1; m++) {
+    const f0 = midiToFrequency(m);
+    rawFundamental[m] = computeGoertzelMagnitude(windowed, sampleRate, f0);
+    if (m >= minMidi && m <= maxMidi) {
+      secondHarmonic[m] = computeGoertzelMagnitude(windowed, sampleRate, f0 * 2);
+    }
+  }
+
+  // Step 1: Identify local semitone peaks (strictly sharper than m-1 and m+1)
+  let maxMag = 0;
+  for (let m = minMidi; m <= maxMidi; m++) {
+    if (rawFundamental[m] > maxMag) {
+      maxMag = rawFundamental[m];
+    }
+  }
+  if (maxMag < 1e-4) return [];
+
+  const effectiveFundamental = new Float32Array(rawFundamental);
+  const expectedSet = new Set(expectedMidis);
+  const detected: YinPitchEstimate[] = [];
+
+  for (let m = minMidi; m <= maxMidi; m++) {
+    const mag = effectiveFundamental[m];
+    const leftMag = rawFundamental[m - 1];
+    const rightMag = rawFundamental[m + 1];
+
+    // Must be a local peak across adjacent semitones
+    const isLocalPeak = mag > leftMag * 1.15 && mag > rightMag * 1.15;
+    if (!isLocalPeak) continue;
+
+    const isExpected = expectedSet.has(m);
+    const relThreshold = isExpected ? 0.16 : 0.24;
+    if (mag < maxMag * relThreshold) continue;
+
+    // Verify harmonic support or strong fundamental energy
+    const harmonicScore = mag + 0.35 * secondHarmonic[m];
+    const confidence = Math.min(0.99, Math.max(0.72, harmonicScore / (maxMag * 1.1)));
+
+    detected.push({
+      frequencyHz: midiToFrequency(m),
+      midi: m,
+      centsOff: 0,
+      confidence,
+      rms,
+    });
+
+    // Subtract expected 2nd, 3rd, and 4th harmonic overtones from higher MIDI candidates
+    // +12 semitones = 2f0, +19 semitones ≈ 3f0, +24 semitones = 4f0
+    if (m + 12 <= maxMidi) {
+      effectiveFundamental[m + 12] = Math.max(
+        0,
+        effectiveFundamental[m + 12] - rawFundamental[m] * 0.55
+      );
+    }
+    if (m + 19 <= maxMidi) {
+      effectiveFundamental[m + 19] = Math.max(
+        0,
+        effectiveFundamental[m + 19] - rawFundamental[m] * 0.28
+      );
+    }
+    if (m + 24 <= maxMidi) {
+      effectiveFundamental[m + 24] = Math.max(
+        0,
+        effectiveFundamental[m + 24] - rawFundamental[m] * 0.16
+      );
+    }
+  }
+
+  return detected.slice(0, 5);
+}
+
+/**
  * Real-time Web Audio microphone pitch detector with multi-frame debounce and re-attack detection.
  */
 export class MicPitchDetector {
@@ -148,10 +275,11 @@ export class MicPitchDetector {
   private candidateMidi: number | null = null;
   private candidateCount = 0;
   private activeNoteMidi: number | null = null;
+  private activePolyMidis: Set<number> = new Set();
+  private expectedTargetMidis: number[] = [];
   private prevRms = 0;
   private minRmsSinceNoteOn = 0;
   private silentFramesCount = 0;
-
   private noteListeners: Set<NoteEventListener> = new Set();
   private telemetryListeners: Set<MicTelemetryListener> = new Set();
 
@@ -207,6 +335,10 @@ export class MicPitchDetector {
     return { ...this.config };
   }
 
+  public setExpectedTargetMidis(midis: number[]): void {
+    this.expectedTargetMidis = [...midis];
+  }
+
   public getTelemetry(): LiveMicTelemetry {
     return { ...this.latestTelemetry };
   }
@@ -214,7 +346,6 @@ export class MicPitchDetector {
   public isActive(): boolean {
     return this.active;
   }
-
   /**
    * Requests microphone access and begins 60fps YIN pitch polling.
    */
@@ -282,7 +413,10 @@ export class MicPitchDetector {
       this.emitNoteOff(this.activeNoteMidi);
       this.activeNoteMidi = null;
     }
-
+    for (const m of this.activePolyMidis) {
+      this.emitNoteOff(m);
+    }
+    this.activePolyMidis.clear();
     if (this.sourceNode) {
       try {
         this.sourceNode.disconnect();
@@ -378,6 +512,47 @@ export class MicPitchDetector {
     const rms = Math.sqrt(sumSquares / buf.length);
     const dbLevel = rms > 1e-6 ? Math.max(-100, 20 * Math.log10(rms)) : -100;
 
+    // When 2+ simultaneous notes are expected (chords or two-hand play), run polyphonic spectral detection
+    if (this.expectedTargetMidis.length >= 2 && rms >= this.config.rmsThreshold) {
+      const polyEstimates = estimatePolyphonicChords(
+        buf,
+        this.audioCtx.sampleRate,
+        this.expectedTargetMidis,
+        this.config.rmsThreshold
+      );
+      if (polyEstimates.length >= 2) {
+        this.silentFramesCount = 0;
+        const currentMidis = new Set(polyEstimates.map((e) => e.midi));
+        for (const est of polyEstimates) {
+          if (!this.activePolyMidis.has(est.midi)) {
+            this.activePolyMidis.add(est.midi);
+            this.emitNoteOn(est);
+          }
+        }
+        for (const prevMidi of Array.from(this.activePolyMidis)) {
+          if (!currentMidis.has(prevMidi)) {
+            this.activePolyMidis.delete(prevMidi);
+            this.emitNoteOff(prevMidi);
+          }
+        }
+        const primary = polyEstimates[0];
+        this.latestTelemetry = {
+          active: true,
+          rmsLevel: Math.min(1, rms * 8),
+          dbLevel: Math.round(dbLevel),
+          detectedMidi: primary.midi,
+          detectedNoteName: polyEstimates.map((p) => midiToNoteName(p.midi)).join('+'),
+          frequencyHz: Number(primary.frequencyHz.toFixed(1)),
+          centsOff: 0,
+          confidence: Number(primary.confidence.toFixed(2)),
+        };
+        this.prevRms = rms;
+        this.emitTelemetry(this.latestTelemetry);
+        this.scheduleNextFrame();
+        return;
+      }
+    }
+
     const estimate = estimatePitchYIN(
       buf,
       this.audioCtx.sampleRate,
@@ -391,8 +566,6 @@ export class MicPitchDetector {
       estimate.confidence >= 0.72
     ) {
       this.silentFramesCount = 0;
-
-      // Re-attack detection on same note when RMS spikes after a dip
       const isSameNoteAsActive = this.activeNoteMidi === estimate.midi;
       const isFreshAttackSpike =
         isSameNoteAsActive &&
@@ -450,7 +623,12 @@ export class MicPitchDetector {
         this.emitNoteOff(this.activeNoteMidi);
         this.activeNoteMidi = null;
       }
-
+      if (this.activePolyMidis.size > 0 && this.silentFramesCount >= 3) {
+        for (const m of this.activePolyMidis) {
+          this.emitNoteOff(m);
+        }
+        this.activePolyMidis.clear();
+      }
       this.latestTelemetry = {
         active: true,
         rmsLevel: Math.min(1, rms * 8),

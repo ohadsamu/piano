@@ -50,7 +50,8 @@ export interface InteractiveKeyboardProps {
   showQwertyLabels?: boolean;
   /** Compact height variant for mini keybed preview or video drawer */
   compact?: boolean;
-  /** Triggered when a user presses a key via mouse or touch */
+  /** Slim Music-Stand Reference Mode for players with a real Electric/Acoustic Piano */
+  standMode?: boolean;
   onNoteOn?: (midi: number, velocity?: number) => void;
   /** Triggered when a user releases a key via mouse or touch */
   onNoteOff?: (midi: number) => void;
@@ -72,14 +73,13 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
   showFingerNumbers = true,
   showQwertyLabels = true,
   compact = false,
+  standMode = false,
   onNoteOn,
   onNoteOff,
   className = '',
 }) => {
-  const isPointerDownRef = useRef(false);
-  const activePointerMidiRef = useRef<number | null>(null);
-  const [localPressedMidi, setLocalPressedMidi] = useState<number | null>(null);
-
+  const activePointersRef = useRef<Map<number, number>>(new Map());
+  const [localPressedMidis, setLocalPressedMidis] = useState<number[]>([]);
   const whiteKeys = useMemo(() => getWhiteKeyboardKeys(), []);
   const blackKeys = useMemo(() => getBlackKeyboardKeys(), []);
   const allKeys = useMemo(() => getAllKeyboardKeys(), []);
@@ -87,11 +87,11 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
   const heldSet = useMemo(() => {
     const list = currentlyHeldMidis ?? activeMidis ?? [];
     const set = new Set<number>(list);
-    if (localPressedMidi !== null) {
-      set.add(localPressedMidi);
+    for (const m of localPressedMidis) {
+      set.add(m);
     }
     return set;
-  }, [currentlyHeldMidis, activeMidis, localPressedMidi]);
+  }, [currentlyHeldMidis, activeMidis, localPressedMidis]);
 
   const targetMap = useMemo(() => {
     const map = new Map<number, TargetKeyAnnotation>();
@@ -178,60 +178,78 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
     return null;
   }, [liveCorrection, wrongPlayedMidis, hintedMidis, targetMap]);
 
-  const triggerNoteOn = useCallback(
-    (midi: number) => {
-      if (activePointerMidiRef.current === midi) return;
-      if (activePointerMidiRef.current !== null) {
-        onNoteOff?.(activePointerMidiRef.current);
+  const syncLocalPressedMidis = useCallback(() => {
+    setLocalPressedMidis(Array.from(new Set(activePointersRef.current.values())));
+  }, []);
+
+  const triggerPointerNoteOn = useCallback(
+    (pointerId: number, midi: number) => {
+      const prevMidi = activePointersRef.current.get(pointerId);
+      if (prevMidi === midi) return;
+      if (prevMidi !== undefined) {
+        activePointersRef.current.delete(pointerId);
+        const stillHeldByOtherPointer = Array.from(activePointersRef.current.values()).includes(prevMidi);
+        if (!stillHeldByOtherPointer) {
+          onNoteOff?.(prevMidi);
+        }
       }
-      activePointerMidiRef.current = midi;
-      setLocalPressedMidi(midi);
+      activePointersRef.current.set(pointerId, midi);
+      syncLocalPressedMidis();
       onNoteOn?.(midi, 0.82);
     },
-    [onNoteOn, onNoteOff]
+    [onNoteOn, onNoteOff, syncLocalPressedMidis]
   );
 
-  const releaseActivePointerNote = useCallback(() => {
-    isPointerDownRef.current = false;
-    if (activePointerMidiRef.current !== null) {
-      const prev = activePointerMidiRef.current;
-      activePointerMidiRef.current = null;
-      setLocalPressedMidi(null);
-      onNoteOff?.(prev);
-    }
-  }, [onNoteOff]);
+  const releasePointerNote = useCallback(
+    (pointerId: number) => {
+      const prevMidi = activePointersRef.current.get(pointerId);
+      if (prevMidi === undefined) return;
+      activePointersRef.current.delete(pointerId);
+      syncLocalPressedMidis();
+      const stillHeldByOtherPointer = Array.from(activePointersRef.current.values()).includes(prevMidi);
+      if (!stillHeldByOtherPointer) {
+        onNoteOff?.(prevMidi);
+      }
+    },
+    [onNoteOff, syncLocalPressedMidis]
+  );
 
   useEffect(() => {
-    const handleGlobalPointerUp = () => {
-      if (isPointerDownRef.current || activePointerMidiRef.current !== null) {
-        releaseActivePointerNote();
+    const handleGlobalPointerUp = (e: PointerEvent) => {
+      releasePointerNote(e.pointerId);
+    };
+    const handleClearAllPointers = () => {
+      const allMidis = Array.from(new Set(activePointersRef.current.values()));
+      activePointersRef.current.clear();
+      setLocalPressedMidis([]);
+      for (const m of allMidis) {
+        onNoteOff?.(m);
       }
     };
     window.addEventListener('pointerup', handleGlobalPointerUp);
     window.addEventListener('pointercancel', handleGlobalPointerUp);
+    window.addEventListener('blur', handleClearAllPointers);
     return () => {
       window.removeEventListener('pointerup', handleGlobalPointerUp);
       window.removeEventListener('pointercancel', handleGlobalPointerUp);
+      window.removeEventListener('blur', handleClearAllPointers);
     };
-  }, [releaseActivePointerNote]);
+  }, [onNoteOff, releasePointerNote]);
 
   const handleKeyPointerDown = (e: React.PointerEvent, midi: number) => {
     e.preventDefault();
     e.stopPropagation();
-    isPointerDownRef.current = true;
-    triggerNoteOn(midi);
+    triggerPointerNoteOn(e.pointerId, midi);
   };
 
   const handleKeyPointerEnter = (e: React.PointerEvent, midi: number) => {
-    if (!isPointerDownRef.current && e.buttons !== 1) return;
-    triggerNoteOn(midi);
+    if (!activePointersRef.current.has(e.pointerId) && e.buttons !== 1) return;
+    triggerPointerNoteOn(e.pointerId, midi);
   };
 
-  const handleKeyPointerLeave = (_e: React.PointerEvent, midi: number) => {
-    if (isPointerDownRef.current && activePointerMidiRef.current === midi) {
-      onNoteOff?.(midi);
-      activePointerMidiRef.current = null;
-      setLocalPressedMidi(null);
+  const handleKeyPointerLeave = (e: React.PointerEvent, midi: number) => {
+    if (activePointersRef.current.get(e.pointerId) === midi) {
+      releasePointerNote(e.pointerId);
     }
   };
 
@@ -261,7 +279,11 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
     };
   };
 
-  const heightClass = compact ? 'h-24 sm:h-28' : 'h-36 sm:h-40 md:h-44';
+  const heightClass = standMode
+    ? 'h-14 sm:h-16'
+    : compact
+    ? 'h-24 sm:h-28'
+    : 'h-36 sm:h-40 md:h-44';
 
   return (
     <div

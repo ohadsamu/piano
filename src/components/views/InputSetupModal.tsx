@@ -95,6 +95,17 @@ export const InputSetupModal: React.FC<InputSetupModalProps> = ({
 
         {/* Body */}
         <div className="p-6 space-y-6 max-h-[80vh] overflow-y-auto">
+          {/* Electric Piano + Smartphone Music Stand Quick Setup Callout */}
+          <div className="bg-[#1E2230]/80 border border-[#E5A93C]/40 rounded-xl p-4 space-y-1.5">
+            <div className="text-xs font-semibold text-[#E5A93C]">
+              📱 Playing on an Electric Piano with a Smartphone or Laptop?
+            </div>
+            <p className="text-xs text-[#F5F2EB] leading-relaxed">
+              • <strong>Smartphone on Music Stand (Microphone)</strong>: Turn up your electric piano speakers, tap <strong>Enable Microphone</strong> below, and toggle <strong>Piano Stand Mode: ON</strong> on the Practice Stage to maximize Sheet Music legibility. Supports both single notes (YIN) and polyphonic chords/two-hand play (Goertzel FFT).<br />
+              • <strong>USB-MIDI Cable (Works with Headphones)</strong>: Connect your electric piano&rsquo;s USB port to your laptop or Android phone for zero-latency digital detection even with headphones plugged into your piano.
+            </p>
+          </div>
+
           {/* 1. Acoustic Piano Microphone Recognition */}
           <section className="bg-[#0D0F14] border border-[#F5F2EB]/10 rounded-xl p-5 space-y-4">
             <div className="flex items-start justify-between gap-4">
@@ -102,7 +113,7 @@ export const InputSetupModal: React.FC<InputSetupModalProps> = ({
                 <div className="flex items-center gap-2">
                   <Mic className="w-4 h-4 text-[#10B981]" />
                   <h3 className="text-sm font-semibold text-[#F5F2EB]">
-                    1. Acoustic Piano &amp; Keyboard Microphone Listening (YIN Pitch Engine)
+                    1. Electric &amp; Acoustic Piano Microphone Listening (YIN + Polyphonic Chord FFT)
                   </h3>
                 </div>
                 <p className="text-xs text-[#B8B2A6] mt-1">

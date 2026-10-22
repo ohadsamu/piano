@@ -52,7 +52,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
 
   return (
     <header className="border-b border-[#F5F2EB]/10 bg-[#0D0F14]/95 backdrop-blur-md sticky top-0 z-30">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <div className="max-w-[1600px] mx-auto px-3 sm:px-6 h-12 sm:h-16 flex items-center justify-between gap-2 sm:gap-3">
         {/* Brand Identity */}
         <div className="flex items-center gap-3">
           <button
@@ -72,7 +72,7 @@ export const TopNavigation: React.FC<TopNavigationProps> = ({
                   Conservatory Studio
                 </span>
               </div>
-              <p className="text-xs text-[#B8B2A6] hidden sm:block">
+              <p className="text-xs text-[#B8B2A6] hidden 2xl:block">
                 Interactive Piano Coach • Step-by-Step Sight Reading, Chords &amp; Live Feedback
               </p>
             </div>

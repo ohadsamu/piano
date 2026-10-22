@@ -196,6 +196,7 @@ export const App: React.FC = () => {
 
     const unsub = engine.subscribe((newSnap) => {
       setSnapshot(newSnap);
+      sharedInputManager.setExpectedTargetMidis(newSnap.activeTargetMidis);
     });
     return unsub;
   }, [activeLesson, activeStepIndex, activeSongId]);
