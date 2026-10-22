@@ -4,15 +4,15 @@ import {
   ArrowLeft,
   ArrowRight,
   Compass,
-  Flame,
-  Music2,
+  Mic,
   PlayCircle,
-  Sparkles,
   Wrench,
 } from 'lucide-react';
 import type {
   KeyDiscoveryPrompt,
   LiveCorrectionFeedback,
+  LiveMicTelemetry,
+  NoteInputEvent,
   PracticeMode,
   PracticeSessionSnapshot,
   RemediationPlan,
@@ -40,6 +40,8 @@ export interface LiveCoachBannerProps {
   recommendedVideoId?: string;
   lessonStepTitle?: string;
   micActive?: boolean;
+  micTelemetry?: LiveMicTelemetry;
+  lastNoteInput?: NoteInputEvent | null;
   midiConnected?: boolean;
   onToggleMic?: () => void;
   troubleCount?: number;
@@ -65,6 +67,8 @@ export const LiveCoachBanner: React.FC<LiveCoachBannerProps> = ({
   onWatchVideo,
   recommendedVideoId,
   micActive,
+  micTelemetry,
+  lastNoteInput,
   midiConnected,
   onToggleMic,
   troubleCount = 0,
@@ -257,40 +261,49 @@ export const LiveCoachBanner: React.FC<LiveCoachBannerProps> = ({
     );
   }
 
-  // 4. Standard Flow / Wait Mode / Stage Guidance Banner
+  // 4. Unified Calm Coaching Strip (Merges E-Piano Listener Status + Target Note + Coach Trigger)
   const primaryNote = activeNotes[0];
-  const chordNames = Array.from(
-    new Set(activeNotes.map((n) => n.chordSymbol).filter(Boolean))
-  ).join(' / ');
-
-  const currentMeasure = snapshot?.currentMeasure ?? 0;
-  const currentBeat = snapshot?.currentBeat ?? 0;
+  const isListening = Boolean(micActive || midiConnected);
+  const heardLabel =
+    micTelemetry?.detectedNoteName || lastNoteInput?.noteName || null;
 
   return (
     <div
       role="status"
-      className={`w-full bg-[#131620] border-b border-white/10 px-3 sm:px-4 py-2 flex flex-wrap items-center justify-between gap-2 ${className}`}
+      className={`w-full rounded-t-2xl border border-b-0 px-3.5 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 transition-colors ${
+        isListening
+          ? 'bg-[#11181B] border-[#10B981]/35'
+          : 'bg-[#141824] border-[#F5F2EB]/10'
+      } ${className}`}
     >
-      <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 min-w-0">
-        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#E5A93C]/15 border border-[#E5A93C]/45 text-[#E5A93C] shrink-0">
-          <Music2 className="w-3.5 h-3.5" />
-        </span>
-
-        {snapshot && (
-          <span className="px-2 py-0.5 rounded bg-[#0D0F14] border border-white/10 font-tabular text-[11px] font-bold text-[#B8B2A6] shrink-0">
-            Bar {currentMeasure + 1} · Beat {Math.floor(currentBeat % 4) + 1}
+      {/* Left + Center: Listening Readiness & Target Note to Play on E-Piano */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3 min-w-0">
+        {isListening ? (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#10B981]/15 border border-[#10B981]/40 text-xs font-semibold text-[#10B981] shrink-0">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#10B981]" />
+            </span>
+            <span>{midiConnected ? 'MIDI' : 'Listening'}</span>
+            {heardLabel && (
+              <span className="font-tabular text-[#F5F2EB] font-bold">
+                · Heard {heardLabel}
+              </span>
+            )}
+          </span>
+        ) : (
+          <span className="text-xs sm:text-sm font-medium text-[#B8B2A6]">
+            🎹 Play on your physical E-Piano:
           </span>
         )}
 
         {primaryNote ? (
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 text-xs sm:text-sm">
-            <span className="font-semibold text-[#F5F2EB]">
-              {mode === 'wait_mode' ? 'Wait Mode Target:' : 'Current Target:'}
-            </span>
+            <span className="text-[#B8B2A6]">Target:</span>
             {activeNotes.map((n) => (
               <span
                 key={n.id}
-                className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded font-tabular text-xs font-bold border"
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md font-tabular text-xs sm:text-sm font-bold border"
                 style={{
                   backgroundColor:
                     n.hand === 'left'
@@ -301,67 +314,45 @@ export const LiveCoachBanner: React.FC<LiveCoachBannerProps> = ({
                 }}
               >
                 <span>{n.noteName}</span>
-                <span className="opacity-80">
-                  ({n.hand === 'left' ? 'LH' : 'RH'} {getFingerLabel(n.finger)})
+                <span className="opacity-85 font-medium">
+                  · {n.hand === 'left' ? 'Left Hand' : 'Right Hand'} {getFingerLabel(n.finger)}
                 </span>
               </span>
             ))}
-            {streak > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#10B981]/15 border border-[#10B981]/40 text-[#34D399] font-tabular text-xs font-bold">
-                ✓ {streak} in a row · Next note →
-              </span>
-            )}
-            {chordNames && (
-              <span className="px-2 py-0.5 rounded bg-[#E5A93C]/15 text-[#E5A93C] font-tabular text-xs font-bold">
-                Chord: {chordNames}
-              </span>
-            )}
-            {primaryNote.techniqueTip && (
-              <span className="text-xs text-[#B8B2A6] hidden md:inline-flex items-center gap-1 ml-1">
-                <Sparkles className="w-3 h-3 text-[#E5A93C]" />
-                {primaryNote.techniqueTip}
+            {streak >= 2 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#10B981]/15 text-[#34D399] font-tabular text-xs font-semibold">
+                ✓ {streak} in a row
               </span>
             )}
           </div>
         ) : (
           <span className="text-xs sm:text-sm text-[#B8B2A6]">
-            Keep your knuckles gently curved and play the illuminated target keys.
+            Press Play or strike the highlighted note on your E-Piano.
           </span>
         )}
       </div>
 
-      {/* Right Side: 1-Tap Mic CTA + Streak Counter + On-Demand "Fix Me" Diagnostic Trigger */}
-      <div className="flex flex-wrap items-center gap-2 shrink-0">
+      {/* Right: Single Primary Action (Start Listening when off, or quiet Fix Play when needed) */}
+      <div className="flex items-center gap-2 shrink-0 ml-auto">
         {showMicCta && (
           <button
             type="button"
             onClick={onToggleMic}
-            className="bg-[#10B981] hover:bg-[#34D399] text-[#090B0F] font-semibold text-xs px-3 py-1.5 rounded-xl shadow-[0_0_14px_rgba(16,185,129,0.35)] transition-all whitespace-nowrap"
+            className="inline-flex items-center gap-1.5 bg-[#10B981] hover:bg-[#34D399] text-[#090B0F] font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-sm transition-all whitespace-nowrap"
           >
-            🎹 Enable Mic for Real Piano
+            <Mic className="w-3.5 h-3.5" />
+            <span>Start Listening</span>
           </button>
         )}
 
-        {streak >= 3 && (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#10B981]/15 border border-[#10B981]/40 text-[#34D399] font-tabular text-xs font-bold">
-            <Flame className="w-3.5 h-3.5 text-[#E5A93C]" />
-            {streak} Note Streak!
-          </span>
-        )}
-
-        {handleFixMe && (
+        {handleFixMe && troubleCount > 0 && (
           <button
             type="button"
             onClick={handleFixMe}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#1E2230] hover:bg-[#282D42] border border-[#E5A93C]/50 text-[#F5F2EB] text-xs font-semibold transition-colors"
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F59E0B]/15 hover:bg-[#F59E0B]/25 border border-[#F59E0B]/40 text-[#F59E0B] text-xs font-semibold transition-colors"
           >
-            <Wrench className="w-3.5 h-3.5 text-[#E5A93C]" />
-            <span>Identify &amp; Fix Me</span>
-            {troubleCount > 0 && (
-              <span className="px-1.5 py-0.2 rounded-full bg-[#F43F5E] text-white font-tabular text-[10px] font-bold">
-                {troubleCount}
-              </span>
-            )}
+            <Wrench className="w-3.5 h-3.5" />
+            <span>Fix Play ({troubleCount})</span>
           </button>
         )}
       </div>

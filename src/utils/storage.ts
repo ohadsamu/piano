@@ -41,9 +41,9 @@ const DEFAULT_PROFILE: PersistedUserProfile = {
   watchedVideoIds: [],
   completedWorkoutCounts: {},
   micCalibration: {
-    rmsThreshold: 0.0025,
-    yinThreshold: 0.22,
-    stabilityFrames: 1,
+    rmsThreshold: 0.0065,
+    yinThreshold: 0.17,
+    stabilityFrames: 2,
   },
 };
 
@@ -53,27 +53,33 @@ export function loadUserProfile(): PersistedUserProfile {
     if (!raw) return { ...DEFAULT_PROFILE };
     const parsed = JSON.parse(raw) as Partial<PersistedUserProfile>;
     const savedMic = parsed.micCalibration;
-    // Auto-migrate legacy insensitive 0.012 threshold down to 0.0025 for E-Piano sensitivity
+    // Auto-migrate legacy insensitive (0.012) or overly sensitive (0.0025) thresholds to balanced 0.0065
     const migratedMic: MicCalibrationConfig = {
       ...DEFAULT_PROFILE.micCalibration,
       ...(savedMic ?? {}),
       rmsThreshold:
-        savedMic?.rmsThreshold && savedMic.rmsThreshold >= 0.01
-          ? 0.0025
-          : savedMic?.rmsThreshold ?? DEFAULT_PROFILE.micCalibration.rmsThreshold,
-      yinThreshold:
-        savedMic?.yinThreshold && savedMic.yinThreshold <= 0.16
-          ? 0.22
-          : savedMic?.yinThreshold ?? DEFAULT_PROFILE.micCalibration.yinThreshold,
-      stabilityFrames: 1,
+        !savedMic?.rmsThreshold ||
+        savedMic.rmsThreshold >= 0.011 ||
+        savedMic.rmsThreshold <= 0.0035
+          ? 0.0065
+          : savedMic.rmsThreshold,
+      yinThreshold: 0.17,
+      stabilityFrames: 2,
     };
+    const cleanedProgress = {
+      ...DEFAULT_PROFILE.lessonProgress,
+      ...(parsed.lessonProgress ?? {}),
+    };
+    for (const key of Object.keys(cleanedProgress)) {
+      const entry = cleanedProgress[key];
+      if (entry?.lastDiagnosis && entry.lastDiagnosis.overallAccuracyPct === 0) {
+        cleanedProgress[key] = { ...entry, lastDiagnosis: undefined };
+      }
+    }
     return {
       ...DEFAULT_PROFILE,
       ...parsed,
-      lessonProgress: {
-        ...DEFAULT_PROFILE.lessonProgress,
-        ...(parsed.lessonProgress ?? {}),
-      },
+      lessonProgress: cleanedProgress,
       micCalibration: migratedMic,
     };
   } catch {

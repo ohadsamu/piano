@@ -69,7 +69,7 @@ export const App: React.FC = () => {
     DAILY_WORKOUTS[0]?.id ?? 'workout-flashcard-sprint'
   );
   const [activeStepIndex, setActiveStepIndex] = useState<number>(2);
-  const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('both');
+  const [visualizerMode, setVisualizerMode] = useState<VisualizerMode>('sheet');
   // Modals & Drawers
   const [isInputSetupOpen, setIsInputSetupOpen] = useState(false);
   const [isFixMeModalOpen, setIsFixMeModalOpen] = useState(false);
@@ -134,6 +134,37 @@ export const App: React.FC = () => {
     const engine = practiceEngineRef.current!;
     engine.setCallbacks({
       onSessionComplete: (attempts, snap) => {
+        if (snap.mode === 'key_discovery') {
+          // In Step 2 (Key Discovery), mark Step 2 complete without running full-score note diagnosis
+          if (!activeSongId) {
+            setProfile((prev) => {
+              const existing = prev.lessonProgress[activeLesson.id] ?? {
+                lessonId: activeLesson.id,
+                completedStepNumbers: [],
+                starsEarned: 0,
+                bestAccuracyPct: 0,
+                attemptsCount: 0,
+                lastPlayedIso: new Date().toISOString(),
+              };
+              const nextCompletedSteps = Array.from(
+                new Set([...existing.completedStepNumbers, 2])
+              ).sort((a, b) => a - b);
+              return {
+                ...prev,
+                xp: prev.xp + 30,
+                lessonProgress: {
+                  ...prev.lessonProgress,
+                  [activeLesson.id]: {
+                    ...existing,
+                    completedStepNumbers: nextCompletedSteps,
+                  },
+                },
+              };
+            });
+          }
+          return;
+        }
+
         const currentScore = engine.getScore();
         const report = coachEngine.analyzeSession(
           currentScore,

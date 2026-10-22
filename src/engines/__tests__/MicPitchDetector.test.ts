@@ -196,10 +196,19 @@ describe('estimatePolyphonicChords (Electric Piano Microphone Chord & Two-Hand D
     expect(midis).toEqual([60, 65, 67]);
   });
 
-  it('detects quiet E-Piano notes (amplitude = 0.0045) with the new 0.0025 RMS threshold', () => {
-    const quietNote = createPianoToneBuffer(midiToFrequency(64), sampleRate, 4096, 0.0045);
-    const yinRes = estimatePitchYIN(quietNote, sampleRate);
+  it('detects balanced E-Piano notes (amplitude = 0.01) while rejecting broadband room noise in chord mode', () => {
+    const moderateNote = createPianoToneBuffer(midiToFrequency(64), sampleRate, 4096, 0.01);
+    const yinRes = estimatePitchYIN(moderateNote, sampleRate);
     expect(yinRes).not.toBeNull();
     expect(yinRes?.midi).toBe(64);
+
+    // Broadband room noise must be rejected by estimatePolyphonicChords Spectral Crest Factor
+    const noiseBuffer = new Float32Array(4096);
+    let seed = 4242;
+    for (let i = 0; i < noiseBuffer.length; i++) {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      noiseBuffer[i] = ((seed / 0xffffffff) * 2 - 1) * 0.08;
+    }
+    expect(estimatePolyphonicChords(noiseBuffer, sampleRate, [60, 64, 67])).toEqual([]);
   });
 });

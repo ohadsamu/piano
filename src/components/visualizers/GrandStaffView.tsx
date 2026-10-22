@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, Repeat, Sun, Moon } from 'lucide-react';
+import { Repeat, Sun, Moon } from 'lucide-react';
 import type {
   Clef,
   Hand,
@@ -83,7 +83,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
   showFingerNumbers = true,
   defaultTheme = 'stage',
   onSelectMeasure,
-  onFixMeasure,
+  onFixMeasure: _onFixMeasure,
   className = '',
 }) => {
   const [theme, setTheme] = useState<'stage' | 'parchment'>(defaultTheme);
@@ -202,99 +202,41 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
             : 'rgba(13, 15, 20, 0.65)',
         }}
       >
-        <div className="flex flex-wrap items-center gap-1.5 sm:gap-2.5 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0">
           <span
-            className="font-editorial font-semibold tracking-tight text-xs sm:text-sm truncate max-w-[160px] sm:max-w-none"
+            className="font-editorial font-semibold tracking-tight text-xs sm:text-sm truncate"
             style={{ color: defaultInk }}
           >
             {score.title}
           </span>
-          <span
-            className="font-tabular text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded border whitespace-nowrap"
-            style={{
-              color: isParchment ? '#78350F' : '#E5A93C',
-              borderColor: 'rgba(229, 169, 60, 0.35)',
-              backgroundColor: 'rgba(229, 169, 60, 0.1)',
-            }}
-          >
-            {score.timeSignature[0]}/{score.timeSignature[1]} · Key of{' '}
-            {score.keySignature} · {score.bpm} BPM
-          </span>
-          <span
-            className="font-tabular text-[10px] sm:text-[11px] px-1.5 sm:px-2 py-0.5 rounded border font-semibold whitespace-nowrap"
-            style={{
-              color:
-                progressPct === 100
-                  ? isParchment
-                    ? '#065F46'
-                    : '#10B981'
-                  : isParchment
-                  ? '#18181B'
-                  : '#F5F2EB',
-              borderColor:
-                progressPct === 100
-                  ? 'rgba(16, 185, 129, 0.45)'
-                  : isParchment
-                  ? 'rgba(24, 24, 27, 0.18)'
-                  : 'rgba(245, 242, 235, 0.16)',
-              backgroundColor:
-                progressPct === 100
-                  ? 'rgba(16, 185, 129, 0.14)'
-                  : isParchment
-                  ? 'rgba(24, 24, 27, 0.05)'
-                  : 'rgba(255, 255, 255, 0.06)',
-            }}
-          >
-            Progress: {completedNotesCount}/{totalNotesCount} notes ({progressPct}%)
-          </span>
           {loopRange && (
-            <span className="inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded bg-[#E5A93C]/20 text-[#E5A93C] font-tabular text-[10px] sm:text-[11px] font-semibold whitespace-nowrap">
-              <Repeat className="w-3 h-3" />
-              Looping Bars {loopRange[0] + 1}–{loopRange[1] + 1}
-            </span>
-          )}
-          {troubleMeasures.length > 0 && (
             <button
               type="button"
-              onClick={() => {
-                const firstTrouble = troubleMeasures[0];
-                if (onFixMeasure) {
-                  onFixMeasure(firstTrouble);
-                } else {
-                  onSelectMeasure?.(firstTrouble);
-                }
-              }}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#F43F5E]/20 hover:bg-[#F43F5E]/30 border border-[#F43F5E]/50 text-[#F43F5E] font-tabular text-[10px] sm:text-[11px] font-semibold transition-colors whitespace-nowrap"
+              onClick={() => onSelectMeasure?.(loopRange[0])}
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#E5A93C]/20 text-[#E5A93C] font-tabular text-[11px] font-semibold whitespace-nowrap"
+              title="Click to clear bar loop"
             >
-              <AlertTriangle className="w-3 h-3" />
-              <span>
-                Fix Bar{troubleMeasures.length > 1 ? 's' : ''}{' '}
-                {troubleMeasures.map((m) => m + 1).join(', ')}
-              </span>
+              <Repeat className="w-3 h-3" />
+              <span>Looping Bar {loopRange[0] + 1} ×</span>
             </button>
           )}
         </div>
 
-        {/* Legend & Urtext/Stage Theme Switcher */}
-        <div className="flex items-center gap-2 sm:gap-3 ml-auto">
-          <div className="hidden lg:flex items-center gap-2.5 text-[11px]">
-            <span className="inline-flex items-center gap-1" style={{ color: mutedText }}>
-              <span className="w-2 h-2 rounded-full bg-[#38BDF8]" /> First-Try
-            </span>
-            <span className="inline-flex items-center gap-1" style={{ color: mutedText }}>
-              <span className="w-2 h-2 rounded-full bg-[#F59E0B]" /> Hinted
-            </span>
-            <span className="inline-flex items-center gap-1" style={{ color: mutedText }}>
-              <span className="w-2 h-2 rounded-full bg-[#F43F5E]" /> Slip
-            </span>
-          </div>
+        {/* Clean Progress Counter & Theme Toggle */}
+        <div className="flex items-center gap-2.5 ml-auto">
+          <span
+            className="font-tabular text-[11px] font-medium whitespace-nowrap"
+            style={{ color: progressPct === 100 ? '#10B981' : mutedText }}
+          >
+            {completedNotesCount}/{totalNotesCount} notes ({progressPct}%)
+          </span>
 
           <button
             type="button"
             onClick={() =>
               setTheme((prev) => (prev === 'stage' ? 'parchment' : 'stage'))
             }
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] sm:text-[11px] font-medium border transition-colors whitespace-nowrap"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium border transition-colors whitespace-nowrap"
             style={{
               color: defaultInk,
               borderColor: isParchment
@@ -304,17 +246,17 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                 ? 'rgba(24,24,27,0.05)'
                 : 'rgba(255,255,255,0.05)',
             }}
-            title="Switch between Conservatory Dark Stage and Henle Urtext Parchment"
+            title="Switch between Dark Stage and Ivory Paper"
           >
             {isParchment ? (
               <>
                 <Moon className="w-3 h-3 text-[#78350F]" />
-                <span>Stage Dark</span>
+                <span>Dark</span>
               </>
             ) : (
               <>
                 <Sun className="w-3 h-3 text-[#E5A93C]" />
-                <span>Urtext Ivory</span>
+                <span>Ivory</span>
               </>
             )}
           </button>
@@ -401,39 +343,19 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                   BAR {mIdx + 1}
                 </text>
 
-                {/* Trouble Measure Action Pill ("! Fix Bar N") */}
-                {isTrouble && (
-                  <g
-                    className="cursor-pointer"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onFixMeasure) {
-                        onFixMeasure(mIdx);
-                      } else {
-                        onSelectMeasure?.(mIdx);
-                      }
-                    }}
+                {/* Subtle Loop Indicator Pill (Only when actively looping this measure) */}
+                {isInLoop && (
+                  <text
+                    x={mX + MEASURE_WIDTH - 10}
+                    y={46}
+                    textAnchor="end"
+                    fill="#E5A93C"
+                    fontSize={9.5}
+                    fontWeight={700}
+                    fontFamily='"JetBrains Mono", monospace'
                   >
-                    <rect
-                      x={mX + MEASURE_WIDTH - 84}
-                      y={33}
-                      width={76}
-                      height={18}
-                      rx={9}
-                      fill="#F43F5E"
-                    />
-                    <text
-                      x={mX + MEASURE_WIDTH - 46}
-                      y={45}
-                      textAnchor="middle"
-                      fill="#FFFFFF"
-                      fontSize={9.5}
-                      fontWeight={700}
-                      fontFamily='"Plus Jakarta Sans", sans-serif'
-                    >
-                      ! Fix Bar {mIdx + 1}
-                    </text>
-                  </g>
+                    LOOP
+                  </text>
                 )}
 
                 {/* Measure Barline (Right Edge) */}

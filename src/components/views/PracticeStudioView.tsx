@@ -1,14 +1,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowRight,
-  BookOpen,
   CheckCircle2,
   Compass,
-  Music,
+  Keyboard,
   Pause,
   Play,
   RotateCcw,
-  Smartphone,
+  Sliders,
   Sparkles,
   Trophy,
   Volume2,
@@ -29,8 +28,6 @@ import type {
   VisualizerMode,
 } from '../../types';
 import type { SongLibraryEntry } from '../../data/songLibraryData';
-import { TransportControlBar } from '../layout/TransportControlBar';
-import { StepGuideStepper } from '../coaching/StepGuideStepper';
 import { LiveCoachBanner } from '../coaching/LiveCoachBanner';
 import { GrandStaffView } from '../visualizers/GrandStaffView';
 import { FallingNotesCanvas } from '../visualizers/FallingNotesCanvas';
@@ -118,9 +115,9 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
   onOpenFixMeModal,
   onOpenVideoDrawer,
 }) => {
-  // Default to Electric Piano Stand Mode with the on-screen UI piano hidden by default
-  const [standMode, setStandMode] = useState<boolean>(true);
+  // E-Piano Studio Defaults: On-screen piano hidden by default, Studio Options popover closed
   const [hideUiKeyboard, setHideUiKeyboard] = useState<boolean>(true);
+  const [optionsOpen, setOptionsOpen] = useState<boolean>(false);
   useEffect(() => {
     void requestMusicStandWakeLock();
   }, []);
@@ -215,14 +212,23 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
     }
   };
 
+  const stepShortLabels: Record<number, string> = {
+    1: '1. Video',
+    2: '2. Keys',
+    3: '3. Wait',
+    4: '4. Flow',
+    5: '5. Perform',
+  };
+
   return (
-    <div className="flex flex-col min-h-[calc(100vh-3rem)] sm:min-h-[calc(100vh-4rem)] bg-[#0D0F14]">
-      {standMode ? (
-        /* Single-Row Distraction-Free Music Stand Bar for Smartphone + Electric Piano */
-        <div className="bg-[#12151E] border-b border-[#F5F2EB]/10 px-2.5 sm:px-3 py-1.5 flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 min-w-0">
+    <div className="flex flex-col min-h-[calc(100vh-3.5rem)] bg-[#0D0F14]">
+      {/* ONE Unified, Minimalist Studio Control Bar */}
+      <div className="bg-[#12151E] border-b border-[#F5F2EB]/10 px-3 sm:px-6 py-2">
+        <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-2">
+          {/* Left: Piece / Lesson Picker + Step Pills (or Song Mode Pills) */}
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
             <select
-              aria-label="Select Curriculum Unit or Song"
+              aria-label="Select Lesson or Song"
               value={activeSongId ? `song:${activeSongId}` : `lesson:${activeLesson.id}`}
               onChange={(e) => {
                 const val = e.target.value;
@@ -232,16 +238,16 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
                   onSelectLesson(val.slice(7), 2);
                 }
               }}
-              className="bg-[#161922] px-2 py-1 rounded-lg border border-[#E5A93C]/40 text-xs font-semibold text-[#F5F2EB] max-w-[190px] sm:max-w-[260px] truncate"
+              className="bg-[#161922] px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-[#F5F2EB]/15 text-xs sm:text-sm font-semibold text-[#F5F2EB] max-w-[165px] sm:max-w-[280px] truncate cursor-pointer focus:outline-none focus:border-[#E5A93C]"
             >
-              <optgroup label="Curriculum Units" className="bg-[#161922] text-[#E5A93C]">
+              <optgroup label="Curriculum Lessons" className="bg-[#161922] text-[#E5A93C]">
                 {lessons.map((l) => (
                   <option key={l.id} value={`lesson:${l.id}`} className="bg-[#161922] text-[#F5F2EB]">
                     Unit 0{l.unitNumber}: {l.title}
                   </option>
                 ))}
               </optgroup>
-              <optgroup label="Repertoire Songs" className="bg-[#161922] text-[#38BDF8]">
+              <optgroup label="Song Library" className="bg-[#161922] text-[#38BDF8]">
                 {songs.map((s) => (
                   <option key={s.id} value={`song:${s.id}`} className="bg-[#161922] text-[#F5F2EB]">
                     🎵 {s.title} — {s.artist}
@@ -250,60 +256,91 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
               </optgroup>
             </select>
 
-            {/* Step Pills 1..5 when in Curriculum Unit */}
-            {!activeSongId && (
+            {!activeSongId ? (
               <div className="flex items-center gap-0.5 bg-[#0D0F14] p-0.5 rounded-lg border border-[#F5F2EB]/10">
-                {activeLesson.steps.map((st, idx) => (
+                {activeLesson.steps.map((st, idx) => {
+                  const isDone = completedStepNumbers.includes(st.stepNumber);
+                  const isActive = idx === activeStepIndex;
+                  return (
+                    <button
+                      key={st.id}
+                      type="button"
+                      onClick={() => onSelectStep(idx)}
+                      className={`flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-md text-[11px] sm:text-xs font-medium transition-colors ${
+                        isActive
+                          ? 'bg-[#E5A93C] text-[#0D0F14] font-semibold'
+                          : isDone
+                          ? 'text-[#10B981] hover:text-[#F5F2EB]'
+                          : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
+                      }`}
+                      title={st.title}
+                    >
+                      <span className="hidden md:inline">
+                        {stepShortLabels[st.stepNumber] ?? `S${st.stepNumber}`}
+                      </span>
+                      <span className="md:hidden">S{st.stepNumber}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex items-center gap-0.5 bg-[#0D0F14] p-0.5 rounded-lg border border-[#F5F2EB]/10">
+                {(
+                  [
+                    { id: 'wait_mode', label: 'Wait' },
+                    { id: 'slow_practice', label: 'Flow' },
+                    { id: 'auto_demo', label: 'Listen' },
+                  ] as Array<{ id: PracticeMode; label: string }>
+                ).map((m) => (
                   <button
-                    key={st.id}
+                    key={m.id}
                     type="button"
-                    onClick={() => onSelectStep(idx)}
-                    className={`px-2 py-0.5 rounded text-[11px] font-tabular font-semibold ${
-                      idx === activeStepIndex
+                    onClick={() => onChangeMode(m.id)}
+                    className={`px-2.5 py-1 rounded-md text-xs font-semibold ${
+                      snapshot.mode === m.id
                         ? 'bg-[#E5A93C] text-[#0D0F14]'
                         : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
                     }`}
-                    title={st.title}
                   >
-                    S{st.stepNumber}
+                    {m.label}
                   </button>
                 ))}
               </div>
             )}
+          </div>
 
-            {/* Compact Play/Pause & Restart */}
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={snapshot.isPlaying && !snapshot.isPaused ? onPause : onStartOrResume}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#E5A93C] hover:bg-[#F3C66F] text-[#0D0F14] font-bold text-[11px] shadow-sm"
-                title={snapshot.isPlaying && !snapshot.isPaused ? 'Pause' : 'Play / Resume'}
-              >
-                {snapshot.isPlaying && !snapshot.isPaused ? (
-                  <>
-                    <Pause className="w-3 h-3 fill-current" />
-                    <span>Pause</span>
-                  </>
-                ) : (
-                  <>
-                    <Play className="w-3 h-3 fill-current" />
-                    <span>Play</span>
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={onRestart}
-                className="p-1.5 rounded-lg bg-[#161922] hover:bg-[#1E2230] text-[#B8B2A6] hover:text-[#F5F2EB] border border-[#F5F2EB]/10"
-                title="Restart Piece"
-                aria-label="Restart Piece"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
-            </div>
+          {/* Right: Play/Restart + Hand Filter + Key Map Toggle + Studio Options Popover */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <button
+              type="button"
+              onClick={snapshot.isPlaying && !snapshot.isPaused ? onPause : onStartOrResume}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#E5A93C] hover:bg-[#F3C66F] text-[#0D0F14] font-bold text-xs shadow-sm"
+            >
+              {snapshot.isPlaying && !snapshot.isPaused ? (
+                <>
+                  <Pause className="w-3.5 h-3.5 fill-current" />
+                  <span>Pause</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-current" />
+                  <span>Play</span>
+                </>
+              )}
+            </button>
 
-            {/* Compact RH / LH / Both Hand Filter Pills */}
-            <div className="flex items-center gap-0.5 bg-[#0D0F14] p-0.5 rounded-lg border border-[#F5F2EB]/10">
+            <button
+              type="button"
+              onClick={onRestart}
+              className="p-1.5 rounded-lg bg-[#161922] hover:bg-[#1E2230] text-[#B8B2A6] hover:text-[#F5F2EB] border border-[#F5F2EB]/10"
+              title="Restart Piece"
+              aria-label="Restart Piece"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Hand Filter */}
+            <div className="flex items-center bg-[#0D0F14] p-0.5 rounded-lg border border-[#F5F2EB]/10">
               {(
                 [
                   { id: 'right', label: 'RH' },
@@ -315,9 +352,9 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
                   key={h.id}
                   type="button"
                   onClick={() => onChangeHandFilter(h.id)}
-                  className={`px-2 py-0.5 rounded text-[11px] font-semibold ${
+                  className={`px-2 py-1 rounded-md text-xs font-semibold ${
                     snapshot.handFilter === h.id
-                      ? 'bg-[#38BDF8]/25 text-[#38BDF8]'
+                      ? 'bg-[#38BDF8]/20 text-[#38BDF8]'
                       : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
                   }`}
                 >
@@ -325,317 +362,151 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
                 </button>
               ))}
             </div>
-          </div>
 
-          <div className="flex flex-wrap items-center gap-1.5">
-            {/* Mode Quick Switch */}
-            {(
-              [
-                { id: 'wait_mode', label: 'Wait Mode' },
-                { id: 'slow_practice', label: 'Slow 70%' },
-                { id: 'performance', label: 'Perform' },
-                { id: 'auto_demo', label: 'Listen' },
-              ] as Array<{ id: PracticeMode; label: string }>
-            ).map((m) => (
+            {/* Toggle Key Landmark Diagram */}
+            <button
+              type="button"
+              onClick={() => setHideUiKeyboard((v) => !v)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                !hideUiKeyboard
+                  ? 'bg-[#38BDF8]/15 border-[#38BDF8]/40 text-[#38BDF8]'
+                  : 'bg-[#161922] border-[#F5F2EB]/10 text-[#B8B2A6] hover:text-[#F5F2EB]'
+              }`}
+              title="Show or hide the physical key landmark reference map"
+            >
+              <Keyboard className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Key Map</span>
+            </button>
+
+            {/* Studio Options Popover (Tempo, Metronome, Backing, Falling Notes, Diagnostic) */}
+            <div className="relative">
               <button
-                key={m.id}
                 type="button"
-                onClick={() => onChangeMode(m.id)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold ${
-                  snapshot.mode === m.id
-                    ? 'bg-[#38BDF8]/20 text-[#38BDF8] border border-[#38BDF8]/40'
-                    : 'bg-[#161922] text-[#B8B2A6]'
+                onClick={() => setOptionsOpen((o) => !o)}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                  optionsOpen
+                    ? 'bg-[#1E2230] border-[#E5A93C]/50 text-[#F5F2EB]'
+                    : 'bg-[#161922] border-[#F5F2EB]/10 text-[#B8B2A6] hover:text-[#F5F2EB]'
                 }`}
+                title="Tempo, Metronome & View Options"
               >
-                {m.label}
+                <Sliders className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Options</span>
               </button>
-            ))}
 
-            <button
-              type="button"
-              onClick={onOpenFixMeModal}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40"
-            >
-              <Wrench className="w-3 h-3" />
-              <span>Fix Play</span>
-            </button>
+              {optionsOpen && (
+                <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-[#161922] border border-[#F5F2EB]/15 shadow-2xl p-4 z-40 space-y-3 text-xs">
+                  <div className="flex items-center justify-between border-b border-[#F5F2EB]/10 pb-2">
+                    <span className="font-semibold text-[#F5F2EB]">Studio Options</span>
+                    <span className="font-tabular text-[#E5A93C]">{snapshot.effectiveBpm} BPM</span>
+                  </div>
 
-            <button
-              type="button"
-              onClick={() => setStandMode(false)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40"
-              title="Switch to Full Desktop Studio Controls"
-            >
-              <Smartphone className="w-3 h-3" />
-              <span>Stand Mode: ON</span>
-            </button>
-          </div>
-        </div>
-      ) : (
-        <>
-          {/* Top Studio Bar: Lesson / Repertoire Picker + 5-Step Guided Stepper */}
-          <div className="bg-[#12151E] border-b border-[#F5F2EB]/10 px-3 sm:px-4 py-2">
-            <div className="max-w-[1600px] mx-auto flex flex-col 2xl:flex-row 2xl:items-center justify-between gap-2">
-              {/* Left: Lesson & Song Selector */}
-              <div className="flex flex-wrap items-center gap-2">
-                <div
-                  className={`flex items-center gap-2 bg-[#161922] px-3 py-1.5 rounded-xl border ${
-                    !activeSongId
-                      ? 'border-[#E5A93C]/50'
-                      : 'border-[#F5F2EB]/10'
-                  }`}
-                >
-                  <BookOpen className="w-4 h-4 text-[#E5A93C] shrink-0" />
-                  <label htmlFor="studio-lesson-select" className="sr-only">
-                    Select Lesson
-                  </label>
-                  <select
-                    id="studio-lesson-select"
-                    value={activeSongId ? '' : activeLesson.id}
-                    onChange={(e) => {
-                      if (e.target.value) {
-                        onSelectLesson(e.target.value, 0);
+                  {/* Tempo Speed */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#B8B2A6]">Tempo Speed</span>
+                    <div className="flex items-center gap-1 bg-[#0D0F14] p-0.5 rounded-lg">
+                      {[0.6, 0.75, 1].map((mult) => (
+                        <button
+                          key={mult}
+                          type="button"
+                          onClick={() => onChangeTempoMultiplier(mult)}
+                          className={`px-2 py-1 rounded text-[11px] font-tabular font-semibold ${
+                            Math.abs(snapshot.tempoMultiplier - mult) < 0.05
+                              ? 'bg-[#E5A93C] text-[#0D0F14]'
+                              : 'text-[#B8B2A6] hover:text-[#F5F2EB]'
+                          }`}
+                        >
+                          {Math.round(mult * 100)}%
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Toggles */}
+                  <div className="space-y-1.5 pt-1">
+                    <button
+                      type="button"
+                      onClick={onToggleMetronome}
+                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#0D0F14] hover:bg-[#1E2230] text-[#F5F2EB]"
+                    >
+                      <span>Metronome Click</span>
+                      <span className={snapshot.metronomeEnabled ? 'text-[#10B981] font-bold' : 'text-[#7D8494]'}>
+                        {snapshot.metronomeEnabled ? 'On' : 'Off'}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onToggleAccompaniment}
+                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#0D0F14] hover:bg-[#1E2230] text-[#F5F2EB]"
+                    >
+                      <span>Backing Accompaniment</span>
+                      <span className={snapshot.accompanimentEnabled ? 'text-[#10B981] font-bold' : 'text-[#7D8494]'}>
+                        {snapshot.accompanimentEnabled ? 'On' : 'Off'}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onToggleShowNoteNames}
+                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#0D0F14] hover:bg-[#1E2230] text-[#F5F2EB]"
+                    >
+                      <span>Note Names on Sheet</span>
+                      <span className={snapshot.showNoteNames ? 'text-[#10B981] font-bold' : 'text-[#7D8494]'}>
+                        {snapshot.showNoteNames ? 'On' : 'Off'}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onToggleShowOverheadHands}
+                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#0D0F14] hover:bg-[#1E2230] text-[#F5F2EB]"
+                    >
+                      <span>Finger Arch Guide</span>
+                      <span className={snapshot.showOverheadHands ? 'text-[#10B981] font-bold' : 'text-[#7D8494]'}>
+                        {snapshot.showOverheadHands ? 'On' : 'Off'}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onChangeVisualizerMode(visualizerMode === 'sheet' ? 'both' : 'sheet')
                       }
-                    }}
-                    className="bg-transparent text-xs sm:text-sm font-semibold text-[#F5F2EB] focus:outline-none cursor-pointer max-w-[220px] sm:max-w-none truncate"
-                  >
-                    <option value="" disabled className="bg-[#161922] text-[#7D8494]">
-                      Select Curriculum Unit...
-                    </option>
-                    {lessons.map((l) => (
-                      <option key={l.id} value={l.id} className="bg-[#161922] text-[#F5F2EB]">
-                        Unit 0{l.unitNumber}: {l.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                      className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-[#0D0F14] hover:bg-[#1E2230] text-[#F5F2EB]"
+                    >
+                      <span>Falling Notes Cascade</span>
+                      <span className={visualizerMode !== 'sheet' ? 'text-[#10B981] font-bold' : 'text-[#7D8494]'}>
+                        {visualizerMode !== 'sheet' ? 'On' : 'Off'}
+                      </span>
+                    </button>
+                  </div>
 
-                {/* Song Library Free-Roam Picker */}
-                <div
-                  className={`flex items-center gap-2 bg-[#161922] px-3 py-1.5 rounded-xl border ${
-                    activeSongId
-                      ? 'border-[#38BDF8]/50'
-                      : 'border-[#F5F2EB]/10'
-                  }`}
-                >
-                  <Music className="w-4 h-4 text-[#38BDF8] shrink-0" />
-                  <label htmlFor="studio-song-select" className="sr-only">
-                    Or Pick a Repertoire Song
-                  </label>
-                  <select
-                    id="studio-song-select"
-                    value={activeSongId ?? ''}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      onSelectSong(val ? val : null);
-                    }}
-                    className="bg-transparent text-xs font-medium text-[#B8B2A6] hover:text-[#F5F2EB] focus:outline-none cursor-pointer max-w-[220px] sm:max-w-none truncate"
-                  >
-                    <option value="" className="bg-[#161922] text-[#B8B2A6]">
-                      Song Library ({songs.length} Repertoire Pieces)...
-                    </option>
-                    {songs.map((s) => (
-                      <option key={s.id} value={s.id} className="bg-[#161922] text-[#F5F2EB]">
-                        🎵 {s.title} — {s.artist} ({s.difficulty})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Electric Piano Music Stand Mode Toggle */}
-                <button
-                  type="button"
-                  onClick={() => setStandMode(true)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border bg-[#161922] border-[#F5F2EB]/10 text-[#B8B2A6] hover:text-[#10B981] hover:border-[#10B981]/40 transition-colors"
-                  title="Electric Piano Stand Mode: Collapses the touch UI keyboard into a slim landmark & mistake indicator strip so Sheet Music is huge on your music stand"
-                >
-                  <Smartphone className="w-3.5 h-3.5 text-[#10B981]" />
-                  <span>Piano Stand Mode</span>
-                </button>
-              </div>
-
-              {/* Right: 5-Step Lesson Stepper */}
-              {!activeSong && (
-                <div className="w-full 2xl:flex-1 min-w-0">
-                  <StepGuideStepper
-                    steps={activeLesson.steps}
-                    activeStepIndex={activeStepIndex}
-                    completedStepIndices={completedStepNumbers.map((n) => n - 1)}
-                    onSelectStep={(idx) => onSelectStep(idx)}
-                    onNextStep={onAdvanceNextStep}
-                    onWatchVideo={(vidId) => onOpenVideoDrawer(vidId ?? activeLesson.primaryVideoId)}
-                    compact={true}
-                  />
+                  <div className="pt-2 border-t border-[#F5F2EB]/10 flex items-center justify-between gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOptionsOpen(false);
+                        onOpenFixMeModal();
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F59E0B]/20 text-[#F59E0B] font-semibold"
+                    >
+                      <Wrench className="w-3.5 h-3.5" />
+                      <span>Coach Diagnostic</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleToggleLoopTroubleMeasures}
+                      className="px-3 py-1.5 rounded-lg bg-[#0D0F14] text-[#B8B2A6] hover:text-[#F5F2EB]"
+                    >
+                      {snapshot.loopRange ? 'Clear Loop' : 'Loop Bar'}
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
           </div>
-
-          {/* Transport & Practice Mode Controls */}
-          <TransportControlBar
-            mode={snapshot.mode}
-            onChangeMode={onChangeMode}
-            visualizerMode={visualizerMode}
-            onChangeVisualizerMode={onChangeVisualizerMode}
-            isPlaying={snapshot.isPlaying}
-            isPaused={snapshot.isPaused}
-            onStartOrResume={onStartOrResume}
-            onPause={onPause}
-            onRestart={onRestart}
-            currentMeasure={snapshot.currentMeasure}
-            totalMeasures={activeScore.totalMeasures}
-            beatsPerMeasure={activeScore.timeSignature[0]}
-            currentBeat={snapshot.currentBeat}
-            effectiveBpm={snapshot.effectiveBpm}
-            baseBpm={activeScore.bpm}
-            tempoMultiplier={snapshot.tempoMultiplier}
-            onChangeTempoMultiplier={onChangeTempoMultiplier}
-            handFilter={snapshot.handFilter}
-            onChangeHandFilter={onChangeHandFilter}
-            loopRange={snapshot.loopRange}
-            onToggleLoopTroubleMeasures={handleToggleLoopTroubleMeasures}
-            metronomeEnabled={snapshot.metronomeEnabled}
-            onToggleMetronome={onToggleMetronome}
-            accompanimentEnabled={snapshot.accompanimentEnabled}
-            onToggleAccompaniment={onToggleAccompaniment}
-            showNoteNames={snapshot.showNoteNames}
-            onToggleShowNoteNames={onToggleShowNoteNames}
-            showOverheadHands={snapshot.showOverheadHands}
-            onToggleShowOverheadHands={onToggleShowOverheadHands}
-            onOpenFixMeCoach={onOpenFixMeModal}
-            onOpenVideoCoach={() => onOpenVideoDrawer(activeLesson.primaryVideoId)}
-            troubleMeasuresCount={troubleMeasures.length}
-          />
-        </>
-      )}
-      {/* Main Interactive Workspace */}
-      <div className="flex-1 max-w-[1600px] w-full mx-auto px-2.5 sm:px-4 py-2 flex flex-col justify-between gap-2">
-        {/* Real Electric Piano Live Listener & Real-Time Coach HUD */}
-        <div
-          className={`rounded-2xl border p-3.5 sm:p-4 transition-all ${
-            micActive || midiConnected
-              ? 'bg-[#111918] border-[#10B981]/60 shadow-[0_0_24px_rgba(16,185,129,0.15)]'
-              : 'bg-gradient-to-r from-[#161922] via-[#1B222C] to-[#161922] border-[#10B981]/50 shadow-lg'
-          }`}
-        >
-          {!(micActive || midiConnected) ? (
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider bg-[#10B981]/20 text-[#10B981] border border-[#10B981]/40">
-                    Real Electric Piano Mode (No On-Screen Piano Needed)
-                  </span>
-                </div>
-                <h2 className="font-editorial text-base sm:text-lg font-semibold text-[#F5F2EB]">
-                  Play on your physical E-Piano while this screen listens &amp; coaches you in real time
-                </h2>
-                <p className="text-xs text-[#B8B2A6]">
-                  1. Tap <strong className="text-[#10B981]">Start Listening to My E-Piano</strong> below &rarr; 2. Play the highlighted note on your real electric piano &rarr; 3. If you hit a wrong key, the banner tells you how many keys left/right to move.
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
-                {onToggleMic && (
-                  <button
-                    type="button"
-                    onClick={onToggleMic}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#10B981] hover:bg-[#34D399] text-[#090B0F] font-bold text-xs sm:text-sm shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all"
-                  >
-                    <span>🎤 Start Listening to My E-Piano</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setHideUiKeyboard((v) => !v)}
-                  className="px-3 py-2 rounded-xl bg-[#0D0F14] hover:bg-[#1E2230] text-xs font-semibold text-[#B8B2A6] border border-[#F5F2EB]/15"
-                >
-                  {hideUiKeyboard ? 'Show Key Landmark Diagram' : 'Hide On-Screen Piano'}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0D0F14] border border-[#10B981]/50">
-                  <span className="relative flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#10B981] opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#10B981]" />
-                  </span>
-                  <span className="text-xs font-bold text-[#10B981] tracking-wide uppercase">
-                    {midiConnected ? 'USB-MIDI E-Piano Active' : 'Listening to Your E-Piano'}
-                  </span>
-                  {micTelemetry && (
-                    <div
-                      className="w-16 h-2 rounded-full bg-[#161922] overflow-hidden border border-white/10"
-                      title="Live Microphone Volume Level"
-                    >
-                      <div
-                        className="h-full bg-[#10B981] transition-all duration-75"
-                        style={{
-                          width: `${Math.min(100, Math.round((micTelemetry.rmsLevel || 0) * 900))}%`,
-                        }}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Live Note Heard from Physical E-Piano */}
-                <div className="px-3 py-1.5 rounded-xl bg-[#0D0F14] border border-[#F5F2EB]/15 text-xs font-tabular">
-                  <span className="text-[#B8B2A6]">Heard from E-Piano: </span>
-                  {micTelemetry?.detectedNoteName ? (
-                    <strong className="text-[#10B981] text-sm">
-                      {micTelemetry.detectedNoteName}{' '}
-                      <span className="text-[11px] text-[#B8B2A6]">
-                        ({Math.round(micTelemetry.frequencyHz ?? 0)} Hz)
-                      </span>
-                    </strong>
-                  ) : lastNoteInput ? (
-                    <strong className="text-[#38BDF8] text-sm">
-                      {lastNoteInput.noteName} ({Math.round(lastNoteInput.frequencyHz)} Hz)
-                    </strong>
-                  ) : (
-                    <span className="text-[#E5A93C] font-semibold">
-                      Play the target note on your e-piano...
-                    </span>
-                  )}
-                </div>
-
-                {/* Target Note on Sheet */}
-                {activeTargetNotes.length > 0 && (
-                  <div className="px-3 py-1.5 rounded-xl bg-[#0D0F14] border border-[#38BDF8]/40 text-xs font-tabular">
-                    <span className="text-[#B8B2A6]">Target on E-Piano: </span>
-                    <strong className="text-[#38BDF8] text-sm">
-                      {activeTargetNotes
-                        .map(
-                          (n) =>
-                            `${n.noteName} (${n.hand === 'right' ? 'RH' : 'LH'} Finger ${n.finger})`
-                        )
-                        .join(' + ')}
-                    </strong>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={onOpenFixMeModal}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#F59E0B]/20 hover:bg-[#F59E0B]/30 text-xs font-semibold text-[#F59E0B] border border-[#F59E0B]/40"
-                >
-                  <Wrench className="w-3.5 h-3.5" />
-                  <span>Diagnose &amp; Fix My Play</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHideUiKeyboard((v) => !v)}
-                  className="px-3 py-1.5 rounded-xl bg-[#0D0F14] hover:bg-[#1E2230] text-xs font-semibold text-[#B8B2A6] border border-[#F5F2EB]/15"
-                >
-                  {hideUiKeyboard ? 'Show Key Landmark Diagram' : 'Hide On-Screen Piano'}
-                </button>
-              </div>
-            </div>
-          )}
         </div>
-        {/* Rewarding Step / Piece Complete Celebration Banner */}
+      </div>
+
+      {/* Main Interactive Workspace */}
+      <div className="flex-1 max-w-[1600px] w-full mx-auto px-3 sm:px-6 py-3 flex flex-col gap-3">
         {snapshot.isCompleted && (
           <div className="border-2 border-[#10B981] bg-gradient-to-r from-[#161922] via-[#1A2421] to-[#161922] rounded-2xl p-3.5 sm:p-4 shadow-[0_12px_36px_rgba(16,185,129,0.2)] flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             <div className="space-y-2">
@@ -737,28 +608,28 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
           </div>
         ) : (
           <>
-            {/* Live Corrective Coach Banner ("Identify My Play & Fix Me" + Step Prompts) */}
-            {(snapshot.mode !== 'key_discovery' ||
-              (snapshot.liveCorrection &&
-                snapshot.liveCorrection.direction !== 'exact')) && (
-              <LiveCoachBanner
-                snapshot={snapshot}
-                activeNotes={activeTargetNotes}
-                discoveryPrompts={discoveryPrompts}
-                remediationPlan={diagnosisReport?.remediationPlan ?? null}
-                onOpenFixMe={onOpenFixMeModal}
-                onOpenVideo={(vidId) =>
-                  onOpenVideoDrawer(vidId ?? activeLesson.primaryVideoId)
-                }
-                troubleCount={troubleMeasures.length}
-                micActive={micActive}
-                midiConnected={midiConnected}
-                onToggleMic={onToggleMic}
-              />
-            )}
-
-            {/* Visualizers Stack: Step 2 Landmark Discovery Stage OR Grand Staff Sheet Music & Falling Notes Cascade + Flush Keybed */}
+            {/* Visualizers Stack: Unified Coaching Strip + Sheet Music + Finger Arch Guide */}
             <div className="flex flex-col">
+              {(snapshot.mode !== 'key_discovery' ||
+                (snapshot.liveCorrection &&
+                  snapshot.liveCorrection.direction !== 'exact')) && (
+                <LiveCoachBanner
+                  snapshot={snapshot}
+                  activeNotes={activeTargetNotes}
+                  discoveryPrompts={discoveryPrompts}
+                  remediationPlan={diagnosisReport?.remediationPlan ?? null}
+                  onOpenFixMe={onOpenFixMeModal}
+                  onOpenVideo={(vidId) =>
+                    onOpenVideoDrawer(vidId ?? activeLesson.primaryVideoId)
+                  }
+                  troubleCount={troubleMeasures.length}
+                  micActive={micActive}
+                  micTelemetry={micTelemetry}
+                  lastNoteInput={lastNoteInput}
+                  midiConnected={midiConnected}
+                  onToggleMic={onToggleMic}
+                />
+              )}
               {snapshot.mode === 'key_discovery' && activeDiscoveryPrompt && discoveryScore ? (
                 <div className="bg-[#161922] border border-[#38BDF8]/30 rounded-t-2xl p-4 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
                   {/* Left Column: Physical Piano Landmark Orientation */}
@@ -856,7 +727,7 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
                       troubleMeasures={troubleMeasures}
                       showNoteNames={snapshot.showNoteNames}
                       showFingerNumbers={snapshot.showFingerNumbers}
-                      className="rounded-t-2xl border border-[#F5F2EB]/10"
+                      className="border border-[#F5F2EB]/10"
                       onSelectMeasure={(m) => {
                         if (
                           snapshot.loopRange &&
@@ -875,8 +746,7 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
                     />
                   )}
 
-                  {(visualizerMode === 'both' || visualizerMode === 'falling') &&
-                    (!standMode || visualizerMode === 'falling') && (
+                  {(visualizerMode === 'both' || visualizerMode === 'falling') && (
                       <div
                         className={`relative ${
                           visualizerMode === 'falling' ? 'h-[260px]' : 'h-[112px]'
@@ -928,13 +798,6 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
                     <div className="flex items-center gap-3">
                       <button
                         type="button"
-                        onClick={() => setStandMode((s) => !s)}
-                        className="text-[#38BDF8] hover:underline font-semibold"
-                      >
-                        {standMode ? 'Expand Diagram' : 'Compact Strip'}
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => setHideUiKeyboard(true)}
                         className="text-[#F43F5E] hover:underline font-semibold"
                       >
@@ -944,7 +807,7 @@ export const PracticeStudioView: React.FC<PracticeStudioViewProps> = ({
                   </div>
 
                   <InteractiveKeyboard
-                    standMode={standMode}
+                    standMode={true}
                     currentlyHeldMidis={snapshot.currentlyHeldMidis}
                     activeTargetMidis={snapshot.activeTargetMidis}
                     activeTargetNotes={activeTargetNotes}
