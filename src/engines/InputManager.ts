@@ -10,6 +10,12 @@ import { MicPitchDetector } from './MicPitchDetector';
 import { MidiInputAdapter } from './MidiInputAdapter';
 import { QwertyInputAdapter, type QwertyLayoutMode } from './QwertyInputAdapter';
 
+/** A mic note_on of the same pitch within this window after a QWERTY/virtual/MIDI note_on is treated as speaker echo. */
+export const MIC_ECHO_WINDOW_MS = 1000;
+
+const nowMs = (): number =>
+  typeof performance !== 'undefined' ? performance.now() : Date.now();
+
 export type UnifiedNoteListener = (event: NoteInputEvent) => void;
 export type MicTelemetrySubscriber = (telemetry: LiveMicTelemetry) => void;
 export type MidiDevicesSubscriber = (devices: MidiDeviceInfo[]) => void;
@@ -30,6 +36,9 @@ export class InputManager {
   private midiDeviceListeners: Set<MidiDevicesSubscriber> = new Set();
 
   private activeVirtualMidis: Set<number> = new Set();
+  private nonMicHeldMidis: Set<number> = new Set();
+  private lastNonMicNoteOnAt: Map<number, number> = new Map();
+  private suppressedMicMidis: Set<number> = new Set();
   /** When false (default), acoustic microphone notes do not double-trigger the internal piano synth */
   private micSynthMonitor = false;
   private localSynthEnabled = true;
@@ -57,7 +66,44 @@ export class InputManager {
     );
   }
 
+  /**
+   * Returns true when a microphone event is only the echo of a note another source
+   * (QWERTY / virtual / MIDI) just produced: the local synth (or the real piano wired via
+   * MIDI) comes back through the speakers into the mic. Without this, one key press can
+   * satisfy two consecutive wait-mode targets on repeated notes (E-E), or count twice.
+   */
+  private isMicEcho(event: NoteInputEvent): boolean {
+    if (event.source === 'microphone') {
+      if (event.type === 'note_on') {
+        const lastNonMic = this.lastNonMicNoteOnAt.get(event.midi);
+        const now = event.timestampMs || nowMs();
+        const echo =
+          this.nonMicHeldMidis.has(event.midi) ||
+          (lastNonMic !== undefined && now - lastNonMic < MIC_ECHO_WINDOW_MS);
+        if (echo) {
+          this.suppressedMicMidis.add(event.midi);
+          return true;
+        }
+        return false;
+      }
+      if (this.suppressedMicMidis.has(event.midi)) {
+        this.suppressedMicMidis.delete(event.midi);
+        return true;
+      }
+      return false;
+    }
+    if (event.type === 'note_on') {
+      this.nonMicHeldMidis.add(event.midi);
+      this.lastNonMicNoteOnAt.set(event.midi, event.timestampMs || nowMs());
+    } else {
+      this.nonMicHeldMidis.delete(event.midi);
+    }
+    return false;
+  }
+
   private handleIncomingNoteEvent(event: NoteInputEvent): void {
+    if (this.isMicEcho(event)) return;
+
     const shouldPlaySynth =
       this.localSynthEnabled &&
       (event.source !== 'microphone' || this.micSynthMonitor);

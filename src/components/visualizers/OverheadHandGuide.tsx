@@ -231,7 +231,7 @@ export const OverheadHandGuide: React.FC<OverheadHandGuideProps> = ({
         {/* Floating Hand & Finger Callout Pill */}
         {activeSummary && (
           <div
-            className="mb-1 px-2 py-0.5 rounded-full text-[10px] font-tabular font-bold tracking-tight whitespace-nowrap shadow-md border"
+            className="mb-1 px-2 py-0.5 rounded-full text-[10px] tabular-nums font-bold tracking-tight whitespace-nowrap shadow-md border"
             style={{
               backgroundColor: 'rgba(13, 15, 20, 0.92)',
               borderColor: primaryColor,
@@ -336,7 +336,7 @@ export const OverheadHandGuide: React.FC<OverheadHandGuideProps> = ({
                   fill={badgeText}
                   fontSize={isFingerActive ? 10.5 : 9}
                   fontWeight={700}
-                  fontFamily='"JetBrains Mono", monospace'
+                  fontFamily='"Plus Jakarta Sans", system-ui, sans-serif'
                 >
                   {fingerNum}
                 </text>

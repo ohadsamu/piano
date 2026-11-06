@@ -269,7 +269,7 @@ export const VIDEO_LESSONS: VideoLesson[] = [
     interactiveCheckpoint: {
       prompt: 'Landmark Compass Check: C3 → C4 → E4',
       instructions:
-        'Find Bass C3 (left of lower 2 black keys), then Middle C4, then E4 (right of center 2 black keys).',
+        'Use your Right Hand. With your Thumb (1), find Bass C3 (left of the lower 2 black keys), then hop up to Middle C4. Finish with E4 (right of the center 2 black keys) using your Middle Finger (3).',
       targetMidis: [48, 60, 64],
       targetNoteNames: ['C3', 'C4', 'E4'],
       hand: 'right',
@@ -428,11 +428,12 @@ export const VIDEO_LESSONS: VideoLesson[] = [
         demoNote('v04', 0, 2, 1, 60, 'right', 1, { lyric: '3' }),
         demoNote('v04', 0, 3, 1, 62, 'right', 2, { lyric: '4' }),
         demoNote('v04', 1, 4, 2, 64, 'right', 3, {
-          chordSymbol: 'G (Half Notes)',
+          chordSymbol: 'C (Half Notes)',
           techniqueTip: 'Half Note: Keep Finger 3 pressed through Beat 1 AND Beat 2',
           lyric: 'Hold 1-2',
         }),
         demoNote('v04', 1, 6, 2, 62, 'right', 2, {
+          chordSymbol: 'G',
           techniqueTip: 'Half Note: Keep Finger 2 down through Beat 3 AND Beat 4',
           lyric: 'Hold 3-4',
         }),
@@ -444,7 +445,8 @@ export const VIDEO_LESSONS: VideoLesson[] = [
       ],
       accompaniment: [
         { beatStart: 0, durationBeats: 4, midiNotes: [48, 55], style: 'bass_pulse', velocity: 46 },
-        { beatStart: 4, durationBeats: 4, midiNotes: [43, 50, 55], style: 'bass_pulse', velocity: 46 },
+        { beatStart: 4, durationBeats: 2, midiNotes: [48, 52, 55], style: 'bass_pulse', velocity: 46 },
+        { beatStart: 6, durationBeats: 2, midiNotes: [43, 50, 55], style: 'bass_pulse', velocity: 46 },
         { beatStart: 8, durationBeats: 4, midiNotes: [48, 52, 55], style: 'warm_pad', velocity: 50 },
       ],
     },
@@ -599,7 +601,6 @@ export const VIDEO_LESSONS: VideoLesson[] = [
     category: 'Chords & Accompaniment',
     addressesMistakes: ['OCTAVE_SHIFT', 'CHORD_TRANSITION_STALL', 'LANDMARK_DISPLACEMENT'],
     linkedLessonIds: [
-      'lesson-03-bass-clef-anchors',
       'lesson-04-skipping-stones-leaps',
       'lesson-06-four-chord-pop-engine',
     ],
@@ -752,7 +753,7 @@ export const VIDEO_LESSONS: VideoLesson[] = [
           lyric: 'A4',
         }),
         demoNote('v07', 2, 6, 1, 64, 'right', 1, {
-          chordSymbol: 'E7',
+          chordSymbol: 'E',
           lyric: 'E4',
         }),
         demoNote('v07', 2, 7, 1, 68, 'right', 2, {

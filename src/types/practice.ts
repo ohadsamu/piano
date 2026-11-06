@@ -69,4 +69,13 @@ export interface PracticeSessionSnapshot {
   maxStreak: number;
   remediationStageIndex: number;
   remediationCleanPasses: number;
+  /**
+   * Progress of the CURRENT pass, scoped to the notes the engine is actually asking for
+   * (after handFilter + loopRange). In key_discovery these count discovery prompts.
+   * Use these for any "x/y notes (z%)" UI instead of recomputing from score.notes.
+   */
+  completedNoteCount: number;
+  totalNoteCount: number;
+  /** Math.round(completedNoteCount / totalNoteCount * 100); 0 when totalNoteCount is 0. */
+  progressPct: number;
 }

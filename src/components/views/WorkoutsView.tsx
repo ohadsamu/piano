@@ -1,20 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  ArrowLeft,
-  CheckCircle2,
   Ear,
   Flame,
   Lightbulb,
-  Play,
   RotateCcw,
   Sparkles,
   Trophy,
   Volume2,
   Zap,
 } from 'lucide-react';
-import type { NoteInputEvent, ScoreData, WorkoutCard, WorkoutDefinition } from '../../types';
+import type { NoteInputEvent, WorkoutCard, WorkoutDefinition } from '../../types';
 import { buildDirectionalCorrectionCopy, getFingerLabel, midiToNoteName } from '../../utils/midiUtils';
-import { InteractiveKeyboard } from '../visualizers/InteractiveKeyboard';
+import { KeyboardDock } from '../practice/KeyboardDock';
 import { GrandStaffView } from '../visualizers/GrandStaffView';
 
 interface WorkoutsViewProps {
@@ -27,6 +24,7 @@ interface WorkoutsViewProps {
   lastNoteInput: NoteInputEvent | null;
   currentlyHeldMidis: number[];
   onWorkoutCompleted: (workoutId: string, scoreXp: number) => void;
+  showQwertyLabels?: boolean;
 }
 
 export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
@@ -39,6 +37,7 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
   lastNoteInput,
   currentlyHeldMidis,
   onWorkoutCompleted,
+  showQwertyLabels = false,
 }) => {
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string>(
     initialWorkoutId ?? workouts[0]?.id ?? 'workout-flashcard-sprint'
@@ -114,7 +113,10 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
     const isTarget = currentCard.targetMidis.includes(playedMidi);
 
     if (isTarget) {
-      const nextSatisfied = Array.from(new Set([...satisfiedMidis, playedMidi]));
+      // Keys pressed together arrive in one React batch, so only the last note_on is seen here;
+      // count every target key that is currently held so a chord played at once registers.
+      const heldTargets = currentlyHeldMidis.filter((m) => currentCard.targetMidis.includes(m));
+      const nextSatisfied = Array.from(new Set([...satisfiedMidis, ...heldTargets, playedMidi]));
       setSatisfiedMidis(nextSatisfied);
       setWrongMidis([]);
 
@@ -161,7 +163,7 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
         }, 650);
       }
     } else {
-      // Wrong key pressed — trigger Simply Piano directional fix hint!
+      // Wrong key pressed — show a directional fix hint
       setWrongMidis([playedMidi]);
       setHintRevealed(true);
       setStreak(0);
@@ -191,7 +193,7 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
         <div>
           <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#EC4899] mb-1">
             <Zap className="w-4 h-4" />
-            <span>Simply Piano Style 5-Minute Daily Workouts</span>
+            <span>5-minute daily drills</span>
           </div>
           <h1 className="font-editorial text-2xl font-semibold text-[#F5F2EB]">
             Rapid Reflex &amp; Ear Conditioning Drills
@@ -264,7 +266,7 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                    <span className="px-2.5 py-1 rounded-lg bg-[#1E2230] font-tabular text-xs font-bold text-[#E5A93C]">
+                    <span className="px-2.5 py-1 rounded-lg bg-[#1E2230] tabular-nums text-xs font-bold text-[#E5A93C]">
                       CARD {cardIndex + 1} / {activeWorkout.cards.length}
                     </span>
                     <span className="text-xs font-semibold uppercase tracking-wider text-[#38BDF8]">
@@ -273,7 +275,7 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-4 font-tabular text-xs">
+                  <div className="flex items-center gap-4 tabular-nums text-xs">
                     <span className="flex items-center gap-1 text-[#F59E0B] font-bold">
                       <Flame className="w-4 h-4" /> Streak: {streak}
                     </span>
@@ -292,6 +294,7 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
                 {activeWorkout.type === 'flashcard_sprint' && (
                   <div className="max-w-xl mx-auto rounded-xl overflow-hidden border border-[#F5F2EB]/10">
                     <GrandStaffView
+                      hideHeader
                       score={{
                         id: `fc-${currentCard.id}`,
                         title: 'Sight-Reading Flashcard',
@@ -336,7 +339,7 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
                     return (
                       <div
                         key={midi}
-                        className={`px-5 py-3 rounded-2xl border font-tabular transition-all ${
+                        className={`px-5 py-3 rounded-2xl border tabular-nums transition-all ${
                           isHit
                             ? 'bg-[#10B981]/20 border-[#10B981] text-[#10B981]'
                             : hintRevealed
@@ -407,10 +410,10 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
                           setTimeout(() => onPlayReferenceNote(m), i * 90)
                         )
                       }
-                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1E2230] hover:bg-[#282D3E] text-[#38BDF8] border border-[#38BDF8]/40 text-xs font-semibold transition-colors"
+                      className="shrink-0 min-h-11 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#1E2230] hover:bg-[#282D3E] text-[#38BDF8] border border-[#38BDF8]/40 text-xs font-semibold transition-colors"
                     >
                       <Volume2 className="w-3.5 h-3.5" />
-                      <span>🔊 Hear Target</span>
+                      <span>Hear it</span>
                     </button>
                   )}
                   {!hintRevealed && (
@@ -420,10 +423,10 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
                         setHintRevealed(true);
                         onPlayChord(currentCard.targetMidis, 0.8, 0.7);
                       }}
-                      className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40 text-xs font-semibold"
+                      className="shrink-0 min-h-11 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40 text-xs font-semibold"
                     >
                       <Lightbulb className="w-3.5 h-3.5" />
-                      <span>Show Key Hint</span>
+                      <span>Show me</span>
                     </button>
                   )}
                 </div>
@@ -465,47 +468,43 @@ export const WorkoutsView: React.FC<WorkoutsViewProps> = ({
         )
       )}
 
-      {/* Interactive Piano Keybed Below Workout */}
+      {/* On-screen piano: the same sticky, scrollable dock as practice (44px+ keys on phones). */}
       {currentCard && (
-        <div className="bg-[#161922] border border-[#F5F2EB]/10 rounded-2xl overflow-hidden shadow-xl">
-          <InteractiveKeyboard
-            activeTargetNotes={
-              (activeWorkout.type === 'ear_pitch_match' ||
-                activeWorkout.type === 'flashcard_sprint') &&
-              !hintRevealed
-                ? []
-                : currentCard.targetMidis.map((midi, i) => ({
-                    id: `wk-${midi}`,
+        <KeyboardDock
+          snapshot={{
+            hintedMidis: hintRevealed ? currentCard.targetMidis : [],
+            wrongPlayedMidis: wrongMidis,
+            liveCorrection: null,
+            showNoteNames: activeWorkout.type !== 'flashcard_sprint' || hintRevealed,
+            showFingerNumbers: true,
+          }}
+          targets={
+            (activeWorkout.type === 'ear_pitch_match' || activeWorkout.type === 'flashcard_sprint') &&
+            !hintRevealed
+              ? []
+              : currentCard.targetMidis
+                  .filter((m) => !satisfiedMidis.includes(m))
+                  .map((midi, i) => ({
                     midi,
                     noteName: midiToNoteName(midi),
-                    measureIndex: 0,
-                    beatStart: 0,
-                    durationBeats: 1,
-                    durationType: 'quarter',
                     hand: currentCard.hand,
-                    clef: currentCard.clef,
-                    finger: currentCard.fingers[i] ?? 1,
+                    finger: currentCard.fingers[currentCard.targetMidis.indexOf(midi)] ?? currentCard.fingers[i] ?? 1,
                   }))
+          }
+          heldMidis={currentlyHeldMidis}
+          showQwertyLabels={showQwertyLabels}
+          heightClass="h-[150px] lg:h-[180px] [@media(max-height:480px)]:h-[42dvh]"
+          onKeyDown={(midi) => {
+            if (onVirtualNoteOn) {
+              onVirtualNoteOn(midi, 0.85);
+            } else {
+              onPlayNote(midi, 0.85);
             }
-            hintedMidis={hintRevealed ? currentCard.targetMidis : []}
-            wrongPlayedMidis={wrongMidis}
-            currentlyHeldMidis={currentlyHeldMidis}
-            showNoteNames={
-              activeWorkout.type !== 'flashcard_sprint' || hintRevealed
-            }
-            showFingerNumbers={true}
-            onNoteOn={(midi) => {
-              if (onVirtualNoteOn) {
-                onVirtualNoteOn(midi, 0.85);
-              } else {
-                onPlayNote(midi, 0.85);
-              }
-            }}
-            onNoteOff={(midi) => {
-              onVirtualNoteOff?.(midi);
-            }}
-          />
-        </div>
+          }}
+          onKeyUp={(midi) => {
+            onVirtualNoteOff?.(midi);
+          }}
+        />
       )}
     </div>
   );

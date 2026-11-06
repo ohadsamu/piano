@@ -148,3 +148,8 @@ export function getWhiteKeyboardKeys(): KeyGeometry[] {
 export function getBlackKeyboardKeys(): KeyGeometry[] {
   return ALL_KEYS_LIST.filter((k) => k.isBlack);
 }
+
+/** Horizontal centre (px from the keyboard's left edge) of a key when each white key is `whiteKeyPx` wide. */
+export function keyCenterPx(midi: number, whiteKeyPx: number): number {
+  return (getKeyGeometry(midi).centerPct / 100) * TOTAL_WHITE_KEYS * whiteKeyPx;
+}

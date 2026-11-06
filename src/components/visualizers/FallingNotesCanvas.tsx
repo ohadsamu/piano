@@ -181,7 +181,7 @@ export const FallingNotesCanvas: React.FC<FallingNotesCanvasProps> = ({
 
       // Measure label on the left margin
       if (isMeasureStart && measureIdx < score.totalMeasures) {
-        ctx.font = '700 10px "JetBrains Mono", monospace';
+        ctx.font = '700 10px "Plus Jakarta Sans", system-ui, sans-serif';
         ctx.fillStyle = isLoopBoundary
           ? '#E5A93C'
           : 'rgba(184, 178, 166, 0.55)';
@@ -317,14 +317,14 @@ export const FallingNotesCanvas: React.FC<FallingNotesCanvasProps> = ({
         ctx.fillStyle = 'rgba(9, 11, 15, 0.78)';
         ctx.fill();
 
-        ctx.font = '700 10px "JetBrains Mono", monospace';
+        ctx.font = '700 10px "Plus Jakarta Sans", system-ui, sans-serif';
         ctx.fillStyle = '#F5F2EB';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.fillText(String(note.finger), centerX, badgeY + 0.5);
 
         if (showNoteNames && rawBarHeight >= 40) {
-          ctx.font = '700 10px "JetBrains Mono", monospace';
+          ctx.font = '700 10px "Plus Jakarta Sans", system-ui, sans-serif';
           ctx.fillStyle = '#090B0F';
           ctx.textBaseline = 'bottom';
           ctx.fillText(
@@ -334,7 +334,7 @@ export const FallingNotesCanvas: React.FC<FallingNotesCanvasProps> = ({
           );
         }
       } else if (showNoteNames && rawBarHeight >= 18) {
-        ctx.font = '700 9px "JetBrains Mono", monospace';
+        ctx.font = '700 9px "Plus Jakarta Sans", system-ui, sans-serif';
         ctx.fillStyle = '#090B0F';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';

@@ -189,91 +189,120 @@ export const SONG_LIBRARY: Array<{
     },
   },
   {
-    id: 'song-let-it-be',
-    title: 'Let It Be (Chords & Melody)',
-    artist: 'The Beatles (Conservatory Arrangement)',
-    genre: 'Pop & Film',
+    // Public-domain replacement for a copyrighted pop song: "Jingle Bells"
+    // (James Lord Pierpont, 1857). Same skills: RH 5-finger C position melody
+    // over LH bass roots C3 / F3 / G3.
+    id: 'song-jingle-bells',
+    title: 'Jingle Bells (Chorus)',
+    artist: 'James Lord Pierpont (1857)',
+    genre: 'Folk & Traditional',
     difficulty: 'Beginner 2',
     recommendedVideoId: 'vid-06-left-hand-anchor-and-groove',
     score: {
-      id: 'song-score-let-it-be',
-      title: 'Let It Be (Chords & Melody)',
-      subtitle: 'Pop Ballad · C – G – Am – F Anthem Progression',
-      bpm: 74,
+      id: 'song-score-jingle-bells',
+      title: 'Jingle Bells (Chorus)',
+      subtitle: 'Right Hand C Position Melody · Left Hand Bass Notes C, F & G',
+      bpm: 88,
       timeSignature: [4, 4],
       keySignature: 'C Major',
-      totalMeasures: 4,
-      totalBeats: 16,
+      totalMeasures: 8,
+      totalBeats: 32,
       notes: [
-        // Measure 1 (C Major): LH C3 + RH melody/chord pulse G4 G4 G4 A4
-        songNote('lib', 0, 0, 4, 48, 'left', 5, {
+        // Measure 1 (C): E4 E4 E4(half)
+        songNote('jgl', 0, 0, 4, 48, 'left', 5, {
           clef: 'bass',
           chordSymbol: 'C',
           durationType: 'whole',
-          techniqueTip: 'Left Hand Pinky (5) anchors Bass C3 across the measure',
+          techniqueTip: 'Left Hand Pinky (5) holds Bass C (C3) for the whole measure',
         }),
-        songNote('lib', 0, 0, 1, 67, 'right', 5, {
-          techniqueTip: 'Right Hand sings the iconic G4 melody note',
-          lyric: 'When',
+        songNote('jgl', 0, 0, 1, 64, 'right', 3, {
+          techniqueTip: 'Right Hand in C position: Thumb (1) on C4, so E4 is Middle Finger (3)',
+          lyric: 'Jin-',
         }),
-        songNote('lib', 0, 1, 1, 67, 'right', 5, { lyric: 'I' }),
-        songNote('lib', 0, 2, 1, 67, 'right', 5, { lyric: 'find' }),
-        songNote('lib', 0, 3, 1, 69, 'right', 5, {
-          techniqueTip: 'Reach Pinky (5) 1 key right to A4',
-          lyric: 'my-',
+        songNote('jgl', 0, 1, 1, 64, 'right', 3, { lyric: 'gle' }),
+        songNote('jgl', 0, 2, 2, 64, 'right', 3, { durationType: 'half', lyric: 'bells —' }),
+        // Measure 2 (C): E4 E4 E4(half)
+        songNote('jgl', 1, 4, 4, 48, 'left', 5, { clef: 'bass', chordSymbol: 'C', durationType: 'whole' }),
+        songNote('jgl', 1, 4, 1, 64, 'right', 3, { lyric: 'jin-' }),
+        songNote('jgl', 1, 5, 1, 64, 'right', 3, { lyric: 'gle' }),
+        songNote('jgl', 1, 6, 2, 64, 'right', 3, { durationType: 'half', lyric: 'bells —' }),
+        // Measure 3 (C): E4 G4 C4 D4
+        songNote('jgl', 2, 8, 4, 48, 'left', 5, { clef: 'bass', chordSymbol: 'C', durationType: 'whole' }),
+        songNote('jgl', 2, 8, 1, 64, 'right', 3, { lyric: 'jin-' }),
+        songNote('jgl', 2, 9, 1, 67, 'right', 5, {
+          techniqueTip: 'Skip up to G4 with Pinky (5), then drop to C4 with Thumb (1)',
+          lyric: 'gle',
         }),
-        // Measure 2 (G Major): LH G3 + RH G4 E4 D4(half)
-        songNote('lib', 1, 4, 4, 55, 'left', 1, {
-          clef: 'bass',
-          chordSymbol: 'G',
+        songNote('jgl', 2, 10, 1, 60, 'right', 1, { lyric: 'all' }),
+        songNote('jgl', 2, 11, 1, 62, 'right', 2, { lyric: 'the' }),
+        // Measure 4 (C): E4(whole)
+        songNote('jgl', 3, 12, 4, 48, 'left', 5, { clef: 'bass', chordSymbol: 'C', durationType: 'whole' }),
+        songNote('jgl', 3, 12, 4, 64, 'right', 3, {
           durationType: 'whole',
-          techniqueTip: 'Left Hand Thumb (1) on G3',
+          techniqueTip: 'Hold E4 for all 4 beats',
+          lyric: 'way — — —',
         }),
-        songNote('lib', 1, 4, 1, 67, 'right', 4, { lyric: 'self' }),
-        songNote('lib', 1, 5, 1, 64, 'right', 3, { lyric: 'in' }),
-        songNote('lib', 1, 6, 2, 62, 'right', 2, {
-          durationType: 'half',
-          lyric: 'times —',
-        }),
-        // Measure 3 (A Minor): LH A3 + RH C4 C4 G4 A4
-        songNote('lib', 2, 8, 4, 57, 'left', 1, {
-          clef: 'bass',
-          chordSymbol: 'Am',
-          durationType: 'whole',
-          techniqueTip: 'Step Left Hand Thumb (1) to A3 for emotional A Minor',
-        }),
-        songNote('lib', 2, 8, 1, 60, 'right', 1, { lyric: 'Mother' }),
-        songNote('lib', 2, 9, 1, 64, 'right', 2, { lyric: 'Ma-' }),
-        songNote('lib', 2, 10, 1, 67, 'right', 4, { lyric: 'ry' }),
-        songNote('lib', 2, 11, 1, 69, 'right', 5, { lyric: 'comes' }),
-        // Measure 4 (F Major -> C): LH F3 + RH G4 F4 E4(half)
-        songNote('lib', 3, 12, 4, 53, 'left', 2, {
+        // Measure 5 (F): F4 F4 F4 F4
+        songNote('jgl', 4, 16, 4, 53, 'left', 2, {
           clef: 'bass',
           chordSymbol: 'F',
           durationType: 'whole',
-          techniqueTip: 'Left Hand Index (2) anchors warm F3',
+          techniqueTip: 'Left Hand Index (2) moves to F3',
         }),
-        songNote('lib', 3, 12, 1, 67, 'right', 4, { lyric: 'Let' }),
-        songNote('lib', 3, 13, 1, 65, 'right', 3, { lyric: 'it' }),
-        songNote('lib', 3, 14, 2, 64, 'right', 2, {
-          durationType: 'half',
-          lyric: 'be —',
+        songNote('jgl', 4, 16, 1, 65, 'right', 4, { lyric: 'Oh' }),
+        songNote('jgl', 4, 17, 1, 65, 'right', 4, { lyric: 'what' }),
+        songNote('jgl', 4, 18, 1, 65, 'right', 4, { lyric: 'fun' }),
+        songNote('jgl', 4, 19, 1, 65, 'right', 4, { lyric: 'it' }),
+        // Measure 6 (C): F4 E4 E4 E4(eighth) E4(eighth)
+        songNote('jgl', 5, 20, 4, 48, 'left', 5, {
+          clef: 'bass',
+          chordSymbol: 'C',
+          durationType: 'whole',
+          techniqueTip: 'Left Hand Pinky (5) back home on C3',
+        }),
+        songNote('jgl', 5, 20, 1, 65, 'right', 4, { lyric: 'is' }),
+        songNote('jgl', 5, 21, 1, 64, 'right', 3, { lyric: 'to' }),
+        songNote('jgl', 5, 22, 1, 64, 'right', 3, { lyric: 'ride' }),
+        songNote('jgl', 5, 23, 0.5, 64, 'right', 3, {
+          durationType: 'eighth',
+          techniqueTip: 'Two quick half-beat notes: count "4-and"',
+          lyric: 'in',
+        }),
+        songNote('jgl', 5, 23.5, 0.5, 64, 'right', 3, { durationType: 'eighth', lyric: 'a' }),
+        // Measure 7 (G7): G4 G4 F4 D4
+        songNote('jgl', 6, 24, 4, 55, 'left', 1, {
+          clef: 'bass',
+          chordSymbol: 'G7',
+          durationType: 'whole',
+          techniqueTip: 'Left Hand Thumb (1) on G3',
+        }),
+        songNote('jgl', 6, 24, 1, 67, 'right', 5, { lyric: 'one' }),
+        songNote('jgl', 6, 25, 1, 67, 'right', 5, { lyric: 'horse' }),
+        songNote('jgl', 6, 26, 1, 65, 'right', 4, { lyric: 'o-' }),
+        songNote('jgl', 6, 27, 1, 62, 'right', 2, { lyric: 'pen' }),
+        // Measure 8 (C): C4(whole)
+        songNote('jgl', 7, 28, 4, 48, 'left', 5, { clef: 'bass', chordSymbol: 'C', durationType: 'whole' }),
+        songNote('jgl', 7, 28, 4, 60, 'right', 1, {
+          durationType: 'whole',
+          techniqueTip: 'Both hands land on C together. Hold for 4 beats!',
+          lyric: 'sleigh! — — —',
         }),
       ],
       accompaniment: [
-        { beatStart: 0, durationBeats: 2, midiNotes: [60, 64], style: 'warm_pad', velocity: 48 },
-        { beatStart: 2, durationBeats: 2, midiNotes: [60, 64], style: 'bass_pulse', velocity: 48 },
-        { beatStart: 4, durationBeats: 2, midiNotes: [59, 62], style: 'warm_pad', velocity: 48 },
-        { beatStart: 6, durationBeats: 2, midiNotes: [59, 62], style: 'bass_pulse', velocity: 48 },
-        { beatStart: 8, durationBeats: 2, midiNotes: [60, 64], style: 'warm_pad', velocity: 48 },
-        { beatStart: 10, durationBeats: 2, midiNotes: [60, 64], style: 'bass_pulse', velocity: 48 },
-        { beatStart: 12, durationBeats: 4, midiNotes: [57, 60], style: 'warm_pad', velocity: 50 },
+        { beatStart: 0, durationBeats: 4, midiNotes: [55, 60], style: 'bass_pulse', velocity: 46 },
+        { beatStart: 4, durationBeats: 4, midiNotes: [55, 60], style: 'bass_pulse', velocity: 46 },
+        { beatStart: 8, durationBeats: 4, midiNotes: [55, 60], style: 'bass_pulse', velocity: 46 },
+        { beatStart: 12, durationBeats: 4, midiNotes: [55, 60], style: 'warm_pad', velocity: 46 },
+        { beatStart: 16, durationBeats: 4, midiNotes: [57, 60], style: 'bass_pulse', velocity: 46 },
+        { beatStart: 20, durationBeats: 4, midiNotes: [55, 60], style: 'bass_pulse', velocity: 46 },
+        { beatStart: 24, durationBeats: 4, midiNotes: [53, 59], style: 'bass_pulse', velocity: 48 },
+        { beatStart: 28, durationBeats: 4, midiNotes: [52, 55, 60], style: 'warm_pad', velocity: 52 },
       ],
     },
   },
   {
     id: 'song-minuet-in-g',
-    title: 'Minuet in G',
+    title: 'Minuet in G (Simplified)',
     artist: 'Christian Petzold / J.S. Bach Notebook',
     genre: 'Classical',
     difficulty: 'Elementary',
@@ -309,18 +338,19 @@ export const SONG_LIBRARY: Array<{
       bpm: 72,
       timeSignature: [4, 4],
       keySignature: 'C Major',
-      totalMeasures: 4,
-      totalBeats: 16,
+      totalMeasures: 5,
+      totalBeats: 20,
       notes: [
-        // Measure 1: C Major (LH C3 half, G3 half; RH E5 half, D5 half)
+        // Measure 1: C -> G (LH C3, G3; RH E5, D5)
         songNote('can', 0, 0, 2, 48, 'left', 5, {
           clef: 'bass',
           chordSymbol: 'C',
           durationType: 'half',
-          techniqueTip: 'Canon Ground Bass: Left Hand Pinky (5) on C3 + Right Hand Pinky (5) on E5',
+          techniqueTip: 'Left Hand Pinky (5) on C3 + Right Hand Pinky (5) on E5',
         }),
         songNote('can', 0, 0, 2, 76, 'right', 5, {
           durationType: 'half',
+          techniqueTip: 'Right Hand rests on A4–E5: Thumb (1) on A4, Pinky (5) on E5',
           lyric: 'Soar —',
         }),
         songNote('can', 0, 2, 2, 55, 'left', 1, {
@@ -329,72 +359,34 @@ export const SONG_LIBRARY: Array<{
           durationType: 'half',
           techniqueTip: 'Left Hand Thumb (1) on G3 + Right Hand Ring (4) on D5',
         }),
-        songNote('can', 0, 2, 2, 74, 'right', 4, {
+        songNote('can', 0, 2, 2, 74, 'right', 4, { durationType: 'half', lyric: 'ing —' }),
+        // Measure 2: Am -> Em (LH A3, E3; RH C5, B4)
+        songNote('can', 1, 4, 2, 57, 'left', 1, { clef: 'bass', chordSymbol: 'Am', durationType: 'half' }),
+        songNote('can', 1, 4, 2, 72, 'right', 3, { durationType: 'half', lyric: 'gen -' }),
+        songNote('can', 1, 6, 2, 52, 'left', 3, { clef: 'bass', chordSymbol: 'Em', durationType: 'half' }),
+        songNote('can', 1, 6, 2, 71, 'right', 2, { durationType: 'half', lyric: 'tly —' }),
+        // Measure 3: F -> C (LH F3, C3; RH A4, G4)
+        songNote('can', 2, 8, 2, 53, 'left', 2, { clef: 'bass', chordSymbol: 'F', durationType: 'half' }),
+        songNote('can', 2, 8, 2, 69, 'right', 1, { durationType: 'half', lyric: 'step -' }),
+        songNote('can', 2, 10, 2, 48, 'left', 5, { clef: 'bass', chordSymbol: 'C', durationType: 'half' }),
+        songNote('can', 2, 10, 2, 67, 'right', 1, {
           durationType: 'half',
-          lyric: 'ing —',
-        }),
-        // Measure 2: Am -> Em (LH A3 half, E3 half; RH C5 half, B4 half)
-        songNote('can', 1, 4, 2, 57, 'left', 1, {
-          clef: 'bass',
-          chordSymbol: 'Am',
-          durationType: 'half',
-        }),
-        songNote('can', 1, 4, 2, 72, 'right', 3, {
-          durationType: 'half',
-          lyric: 'gen -',
-        }),
-        songNote('can', 1, 6, 2, 52, 'left', 3, {
-          clef: 'bass',
-          chordSymbol: 'Em',
-          durationType: 'half',
-        }),
-        songNote('can', 1, 6, 2, 71, 'right', 2, {
-          durationType: 'half',
-          lyric: 'tly —',
-        }),
-        // Measure 3: F -> C (LH F3 half, C3 half; RH A4 half, G4 half)
-        songNote('can', 2, 8, 2, 53, 'left', 2, {
-          clef: 'bass',
-          chordSymbol: 'F',
-          durationType: 'half',
-        }),
-        songNote('can', 2, 8, 2, 69, 'right', 1, {
-          durationType: 'half',
-          lyric: 'step -',
-        }),
-        songNote('can', 2, 10, 2, 48, 'left', 5, {
-          clef: 'bass',
-          chordSymbol: 'C',
-          durationType: 'half',
-        }),
-        songNote('can', 2, 10, 2, 67, 'right', 2, {
-          durationType: 'half',
+          techniqueTip: 'Slide your Right Thumb (1) down one white key to G4',
           lyric: 'ping —',
         }),
-        // Measure 4: F -> G7 -> C (LH F3 half, G3 half; RH A4 half, B4 quarter, C5 quarter)
-        songNote('can', 3, 12, 2, 53, 'left', 2, {
+        // Measure 4: F -> G (LH F3, G3; RH A4, B4)
+        songNote('can', 3, 12, 2, 53, 'left', 2, { clef: 'bass', chordSymbol: 'F', durationType: 'half' }),
+        songNote('can', 3, 12, 2, 69, 'right', 2, { durationType: 'half', lyric: 'home -' }),
+        songNote('can', 3, 14, 2, 55, 'left', 1, { clef: 'bass', chordSymbol: 'G', durationType: 'half' }),
+        songNote('can', 3, 14, 2, 71, 'right', 3, { durationType: 'half', lyric: 'ward —' }),
+        // Measure 5: C (both hands land home)
+        songNote('can', 4, 16, 4, 48, 'left', 5, {
           clef: 'bass',
-          chordSymbol: 'F',
-          durationType: 'half',
-        }),
-        songNote('can', 3, 12, 2, 69, 'right', 3, {
-          durationType: 'half',
-          lyric: 'home -',
-        }),
-        songNote('can', 3, 14, 2, 55, 'left', 1, {
-          clef: 'bass',
-          chordSymbol: 'G7',
-          durationType: 'half',
-        }),
-        songNote('can', 3, 14, 1, 71, 'right', 4, {
-          durationType: 'quarter',
-          lyric: 'ward',
-        }),
-        songNote('can', 3, 15, 1, 72, 'right', 5, {
           chordSymbol: 'C',
-          durationType: 'quarter',
-          lyric: 'now',
+          durationType: 'whole',
+          techniqueTip: 'Both hands land together and hold for 4 beats',
         }),
+        songNote('can', 4, 16, 4, 72, 'right', 4, { durationType: 'whole', lyric: 'home — — —' }),
       ],
       accompaniment: [
         { beatStart: 0, durationBeats: 2, midiNotes: [60, 64, 67], style: 'arpeggio', velocity: 46 },
@@ -405,6 +397,7 @@ export const SONG_LIBRARY: Array<{
         { beatStart: 10, durationBeats: 2, midiNotes: [60, 64, 67], style: 'arpeggio', velocity: 46 },
         { beatStart: 12, durationBeats: 2, midiNotes: [60, 65, 69], style: 'warm_pad', velocity: 48 },
         { beatStart: 14, durationBeats: 2, midiNotes: [59, 62, 67], style: 'warm_pad', velocity: 50 },
+        { beatStart: 16, durationBeats: 4, midiNotes: [55, 60, 64], style: 'warm_pad', velocity: 52 },
       ],
     },
   },

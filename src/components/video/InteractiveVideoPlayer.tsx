@@ -345,7 +345,7 @@ export const InteractiveVideoPlayer: React.FC<InteractiveVideoPlayerProps> = ({
       <div className="px-4 py-3 bg-[#161922] border-b border-white/10 flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2 py-0.5 rounded bg-[#E5A93C]/20 text-[#E5A93C] font-tabular text-[11px] font-bold uppercase">
+            <span className="px-2 py-0.5 rounded bg-[#E5A93C]/20 text-[#E5A93C] tabular-nums text-[11px] font-bold uppercase">
               {video.category}
             </span>
             <span className="text-xs text-[#B8B2A6]">
@@ -400,11 +400,11 @@ export const InteractiveVideoPlayer: React.FC<InteractiveVideoPlayerProps> = ({
               {/* Overhead Camera Narration Stage */}
               <div className="p-4 sm:p-5 bg-gradient-to-b from-[#141824] to-[#090B0F] space-y-3">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#38BDF8]/15 border border-[#38BDF8]/40 text-[#38BDF8] font-tabular font-semibold">
-                    <span className="w-2 h-2 rounded-full bg-[#38BDF8] animate-ping" />
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#38BDF8]/15 border border-[#38BDF8]/40 text-[#38BDF8] tabular-nums font-semibold">
+                    <span className="w-2 h-2 rounded-full bg-[#38BDF8]" />
                     OVERHEAD CONSERVATORY CAMERA
                   </span>
-                  <span className="font-tabular text-[#B8B2A6]">
+                  <span className="tabular-nums text-[#B8B2A6]">
                     Chapter {activeChapterIndex + 1} of {video.chapters.length}
                   </span>
                 </div>
@@ -416,7 +416,7 @@ export const InteractiveVideoPlayer: React.FC<InteractiveVideoPlayerProps> = ({
                       <span className="text-xs font-bold text-[#E5A93C] uppercase tracking-wider">
                         {activeChapter.title}
                       </span>
-                      <span className="text-[11px] font-tabular text-[#38BDF8]">
+                      <span className="text-[11px] tabular-nums text-[#38BDF8]">
                         Key Takeaway: {activeChapter.keyTakeaway}
                       </span>
                     </div>
@@ -513,7 +513,7 @@ export const InteractiveVideoPlayer: React.FC<InteractiveVideoPlayerProps> = ({
                     aria-label="Video timeline scrubber"
                     className="w-full accent-[#E5A93C] cursor-pointer h-1.5 bg-[#090B0F] rounded-lg"
                   />
-                  <span className="font-tabular text-[11px] text-[#B8B2A6] whitespace-nowrap">
+                  <span className="tabular-nums text-[11px] text-[#B8B2A6] whitespace-nowrap">
                     {formatTime(currentTimeSec)} / {video.durationLabel}
                   </span>
                 </div>
@@ -526,7 +526,7 @@ export const InteractiveVideoPlayer: React.FC<InteractiveVideoPlayerProps> = ({
                       key={spd}
                       type="button"
                       onClick={() => setPlaybackSpeed(spd)}
-                      className={`px-2 py-0.5 rounded font-tabular text-[11px] font-bold border transition-colors ${
+                      className={`px-2 py-0.5 rounded tabular-nums text-[11px] font-bold border transition-colors ${
                         playbackSpeed === spd
                           ? 'bg-[#E5A93C]/20 border-[#E5A93C] text-[#E5A93C]'
                           : 'bg-[#1E2230] border-white/10 text-[#B8B2A6] hover:text-white'
@@ -614,7 +614,7 @@ export const InteractiveVideoPlayer: React.FC<InteractiveVideoPlayerProps> = ({
                     }`}
                   >
                     <span
-                      className={`px-1.5 py-0.5 rounded font-tabular text-[11px] font-bold shrink-0 ${
+                      className={`px-1.5 py-0.5 rounded tabular-nums text-[11px] font-bold shrink-0 ${
                         isCurrent
                           ? 'bg-[#E5A93C] text-[#090B0F]'
                           : 'bg-white/10 text-[#B8B2A6]'
@@ -627,7 +627,7 @@ export const InteractiveVideoPlayer: React.FC<InteractiveVideoPlayerProps> = ({
                       <div className="text-xs font-semibold text-[#F5F2EB] flex items-center justify-between gap-1">
                         <span className="truncate">{chap.title}</span>
                         {chap.demoNotesMidi.length > 0 && (
-                          <span className="font-tabular text-[10px] text-[#38BDF8] shrink-0">
+                          <span className="tabular-nums text-[10px] text-[#38BDF8] shrink-0">
                             {chap.demoNotesMidi.map(midiToNoteName).join('–')}
                           </span>
                         )}
@@ -657,12 +657,12 @@ export const InteractiveVideoPlayer: React.FC<InteractiveVideoPlayerProps> = ({
               </span>
 
               {isCheckpointComplete ? (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#10B981] text-[#090B0F] font-tabular text-[10px] font-bold">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#10B981] text-[#090B0F] tabular-nums text-[10px] font-bold">
                   <CheckCircle2 className="w-3 h-3" />
                   Mastered!
                 </span>
               ) : (
-                <span className="font-tabular text-[11px] text-[#B8B2A6]">
+                <span className="tabular-nums text-[11px] text-[#B8B2A6]">
                   {checkpointStepIdx} / {checkpoint.targetMidis.length} notes played
                 </span>
               )}
@@ -699,7 +699,7 @@ export const InteractiveVideoPlayer: React.FC<InteractiveVideoPlayerProps> = ({
                         return next;
                       });
                     }}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-tabular text-xs font-bold border transition-all ${
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md tabular-nums text-xs font-bold border transition-all ${
                       isDone
                         ? 'bg-[#10B981]/20 border-[#10B981] text-[#34D399]'
                         : 'bg-[#1E2230] border-[#38BDF8]/40 text-[#F5F2EB] hover:border-[#38BDF8]'

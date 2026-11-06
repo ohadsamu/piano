@@ -10,6 +10,7 @@ import {
   getBlackKeyboardKeys,
   getKeyGeometry,
   getWhiteKeyboardKeys,
+  TOTAL_WHITE_KEYS,
   type KeyGeometry,
 } from '../../utils/keyboardLayout';
 import { midiToNoteName } from '../../utils/midiUtils';
@@ -52,6 +53,10 @@ export interface InteractiveKeyboardProps {
   compact?: boolean;
   /** Slim Music-Stand Reference Mode for players with a real Electric/Acoustic Piano */
   standMode?: boolean;
+  /** Fixed white-key width in px. When set the keybed is TOTAL_WHITE_KEYS * px wide (for a scrolling dock). */
+  whiteKeyWidthPx?: number;
+  /** Overrides the keybed height classes. */
+  heightClass?: string;
   onNoteOn?: (midi: number, velocity?: number) => void;
   /** Triggered when a user releases a key via mouse or touch */
   onNoteOff?: (midi: number) => void;
@@ -67,17 +72,26 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
   activeTargetNotes = [],
   hintedMidis = [],
   wrongPlayedMidis = [],
-  liveCorrection = null,
+  liveCorrection: rawLiveCorrection = null,
   showNoteNames = true,
   showSolfege = false,
   showFingerNumbers = true,
   showQwertyLabels = true,
   compact = false,
   standMode = false,
+  whiteKeyWidthPx,
+  heightClass: heightClassOverride,
   onNoteOn,
   onNoteOff,
   className = '',
 }) => {
+  // The engine also reports a correct key-discovery press as a "correction" whose
+  // played key equals the target. That is not a mistake: don't paint it red or
+  // point at a target that has already moved on.
+  const liveCorrection =
+    rawLiveCorrection && rawLiveCorrection.playedMidi !== rawLiveCorrection.expectedNote?.midi
+      ? rawLiveCorrection
+      : null;
   const activePointersRef = useRef<Map<number, number>>(new Map());
   const [localPressedMidis, setLocalPressedMidis] = useState<number[]>([]);
   const whiteKeys = useMemo(() => getWhiteKeyboardKeys(), []);
@@ -279,7 +293,10 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
     };
   };
 
-  const heightClass = standMode
+  const fixedWidth = whiteKeyWidthPx ? TOTAL_WHITE_KEYS * whiteKeyWidthPx : undefined;
+  const heightClass = heightClassOverride
+    ? heightClassOverride
+    : standMode
     ? 'h-14 sm:h-16'
     : compact
     ? 'h-24 sm:h-28'
@@ -287,9 +304,11 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
 
   return (
     <div
-      className={`relative w-full select-none bg-[#090B0F] flex flex-col ${className}`}
+      className={`relative ${fixedWidth ? 'shrink-0' : 'w-full'} select-none bg-[#090B0F] flex flex-col ${className}`}
+      style={fixedWidth ? { width: `${fixedWidth}px` } : undefined}
       onContextMenu={(e) => e.preventDefault()}
-      aria-label={`Concert Grand Piano Keyboard (${allKeys.length} keys, C3 to B5)`}
+      role="group"
+      aria-label={`Piano keyboard, ${allKeys.length} keys from C3 to B5`}
     >
       {/* Signature 3px Scarlet Keybed Felt Strip (#9F1239) */}
       <div
@@ -320,20 +339,20 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
             {directionalGuide.direction === 'left' ? (
               <>
                 <ArrowLeft className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#F59E0B] animate-pulse shrink-0" />
-                <span className="text-[#F59E0B] font-tabular">
-                  ← Target {directionalGuide.targetNoteName}
+                <span className="text-[#F59E0B] tabular-nums">
+                  Target {directionalGuide.targetNoteName}
                 </span>
               </>
             ) : (
               <>
-                <span className="text-[#F59E0B] font-tabular">
-                  Target {directionalGuide.targetNoteName} →
+                <span className="text-[#F59E0B] tabular-nums">
+                  Target {directionalGuide.targetNoteName}
                 </span>
                 <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#F59E0B] animate-pulse shrink-0" />
               </>
             )}
             {directionalGuide.finger && (
-              <span className="hidden sm:inline ml-1 px-1.5 py-0.2 rounded bg-[#F59E0B]/20 text-[#F59E0B] font-tabular text-[10px]">
+              <span className="hidden sm:inline ml-1 px-1.5 py-0.2 rounded bg-[#F59E0B]/20 text-[#F59E0B] tabular-nums text-[10px]">
                 Finger {directionalGuide.finger}
               </span>
             )}
@@ -415,7 +434,9 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
               onPointerDown={(e) => handleKeyPointerDown(e, key.midi)}
               onPointerEnter={(e) => handleKeyPointerEnter(e, key.midi)}
               onPointerLeave={(e) => handleKeyPointerLeave(e, key.midi)}
+              aria-label={key.noteName}
               style={{
+                touchAction: 'none',
                 left: `${key.leftPct}%`,
                 width: `${key.widthPct}%`,
                 background: bgStyle,
@@ -424,8 +445,8 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
                 color: textColor,
                 transform: isDepressed ? 'translateY(2px)' : 'translateY(0)',
               }}
-              className={`absolute top-0 bottom-0 z-10 rounded-b-[5px] border-r border-b flex flex-col items-center justify-end pb-1.5 pt-2 transition-transform duration-75 focus:outline-none ${
-                state.isHinted ? 'animate-pulse' : ''
+              className={`absolute top-0 bottom-0 z-10 rounded-b-[5px] border-r border-b flex flex-col items-center justify-end pb-1.5 pt-2 transition-transform duration-75 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-brass ${
+                state.isHinted ? 'motion-safe:animate-pulse' : ''
               }`}
             >
               {/* Middle C Landmark Crown Badge */}
@@ -460,7 +481,7 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
               {/* Finger Number Badge (1-5) */}
               {showFingerNumbers && state.finger && (state.isTarget || state.isHinted) && (
                 <span
-                  className="mb-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center font-tabular text-[11px] sm:text-xs font-bold shadow-md border"
+                  className="mb-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center tabular-nums text-[11px] sm:text-xs font-bold shadow-md border"
                   style={{
                     backgroundColor: state.isHinted
                       ? '#B45309'
@@ -485,7 +506,7 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
               {/* Scientific Pitch Name (C4, D4, etc.) */}
               {showNoteNames && (
                 <span
-                  className={`font-tabular text-[9px] sm:text-[11px] font-bold leading-none ${
+                  className={`tabular-nums text-[9px] sm:text-[11px] font-bold leading-none ${
                     state.isMiddleC ? 'underline decoration-[#D97706] decoration-2' : ''
                   }`}
                 >
@@ -495,7 +516,7 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
 
               {/* QWERTY Computer Keyboard Shortcut Badge */}
               {showQwertyLabels && key.qwertyLabel && !compact && !standMode && (
-                <span className="hidden sm:inline-block mt-1 px-1 py-[1px] rounded bg-black/10 text-[9px] font-tabular font-medium opacity-65 leading-none">
+                <span className={`${fixedWidth ? 'inline-block' : 'hidden sm:inline-block'} mt-1 px-1 py-[1px] rounded bg-black/10 text-[9px] tabular-nums font-medium opacity-65 leading-none`}>
                   [{key.qwertyLabel}]
                 </span>
               )}
@@ -566,7 +587,9 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
               onPointerDown={(e) => handleKeyPointerDown(e, key.midi)}
               onPointerEnter={(e) => handleKeyPointerEnter(e, key.midi)}
               onPointerLeave={(e) => handleKeyPointerLeave(e, key.midi)}
+              aria-label={key.noteName}
               style={{
+                touchAction: 'none',
                 left: `${key.leftPct}%`,
                 width: `${key.widthPct}%`,
                 height: '63%',
@@ -576,8 +599,8 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
                 color: textColor,
                 transform: isDepressed ? 'translateY(2px)' : 'translateY(0)',
               }}
-              className={`absolute top-0 z-20 rounded-b-[4px] border flex flex-col items-center justify-end pb-1.5 transition-transform duration-75 focus:outline-none ${
-                state.isHinted ? 'animate-pulse' : ''
+              className={`absolute top-0 z-20 rounded-b-[4px] border flex flex-col items-center justify-end pb-1.5 transition-transform duration-75 focus:outline-none focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-4 focus-visible:outline-brass ${
+                state.isHinted ? 'motion-safe:animate-pulse' : ''
               }`}
             >
               {/* Wrong Key "Played" Tag */}
@@ -590,7 +613,7 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
               {/* Finger Number Badge */}
               {showFingerNumbers && state.finger && (state.isTarget || state.isHinted) && (
                 <span
-                  className="mb-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center font-tabular text-[10px] font-bold shadow"
+                  className="mb-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full flex items-center justify-center tabular-nums text-[10px] font-bold shadow"
                   style={{
                     backgroundColor: '#090B0F',
                     color: '#F5F2EB',
@@ -603,14 +626,14 @@ export const InteractiveKeyboard: React.FC<InteractiveKeyboardProps> = ({
 
               {/* Note Name on Black Key */}
               {showNoteNames && !compact && (
-                <span className="hidden sm:inline font-tabular text-[9px] font-semibold leading-none opacity-90">
+                <span className="hidden sm:inline tabular-nums text-[9px] font-semibold leading-none opacity-90">
                   {key.noteName}
                 </span>
               )}
 
               {/* QWERTY Label on Black Key */}
               {showQwertyLabels && key.qwertyLabel && !compact && !standMode && (
-                <span className="hidden md:inline mt-0.5 text-[8px] font-tabular opacity-60 leading-none">
+                <span className={`${fixedWidth ? 'inline' : 'hidden md:inline'} mt-0.5 text-[8px] tabular-nums opacity-60 leading-none`}>
                   [{key.qwertyLabel}]
                 </span>
               )}

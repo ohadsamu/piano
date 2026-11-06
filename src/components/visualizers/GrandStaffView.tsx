@@ -27,14 +27,18 @@ export interface GrandStaffViewProps {
   defaultTheme?: 'stage' | 'parchment';
   onSelectMeasure?: (measureIndex: number) => void;
   onFixMeasure?: (measureIndex: number) => void;
+  /** Hide the title / counter header (the practice screen shows its own, truthful progress). */
+  hideHeader?: boolean;
+  /** Render scale for the SVG (1 = 236px tall). Used to fit a phone screen. */
+  scale?: number;
   className?: string;
 }
 
 const STEP_HALF_SPACE = 5.5; // 11px between adjacent staff lines
 const TREBLE_BOTTOM_LINE_Y = 104; // d = +2 (E4)
 const BASS_TOP_LINE_Y = 158; // d = -2 (A3)
-const STAFF_LEFT_HEADER_WIDTH = 104;
-const MEASURE_WIDTH = 228;
+export const STAFF_LEFT_HEADER_WIDTH = 104;
+export const MEASURE_WIDTH = 228;
 const SVG_HEIGHT = 236;
 
 function getNoteY(dStep: number, clef: Clef): number {
@@ -84,6 +88,8 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
   defaultTheme = 'stage',
   onSelectMeasure,
   onFixMeasure: _onFixMeasure,
+  hideHeader = false,
+  scale = 1,
   className = '',
 }) => {
   const [theme, setTheme] = useState<'stage' | 'parchment'>(defaultTheme);
@@ -123,21 +129,26 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
       if (container.scrollLeft > 4) {
         container.scrollTo({
           left: 0,
-          behavior: 'smooth',
+          behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
         });
       }
       return;
     }
 
-    const targetScrollLeft = Math.max(0, playheadX - viewWidth * 0.38);
+    const smooth =
+      typeof window.matchMedia === 'function' &&
+      !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const behavior: ScrollBehavior = smooth ? 'smooth' : 'auto';
+    const x = playheadX * scale;
+    const targetScrollLeft = Math.max(0, x - viewWidth * 0.38);
     const diff = Math.abs(container.scrollLeft - targetScrollLeft);
-    if (diff > viewWidth * 0.18 || playheadX < container.scrollLeft + 60) {
+    if (diff > viewWidth * 0.18 || x < container.scrollLeft + 60) {
       container.scrollTo({
         left: targetScrollLeft,
-        behavior: 'smooth',
+        behavior,
       });
     }
-  }, [playheadX, currentBeat]);
+  }, [playheadX, currentBeat, scale]);
 
   const completedNotesCount = useMemo(() => {
     return score.notes.reduce((count, note) => {
@@ -191,6 +202,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
       style={{ backgroundColor: bgSurface }}
     >
       {/* Top Engraving Header Bar */}
+      {!hideHeader && (
       <div
         className="relative flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-2.5 sm:px-4 py-1.5 border-b text-xs"
         style={{
@@ -213,7 +225,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
             <button
               type="button"
               onClick={() => onSelectMeasure?.(loopRange[0])}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#E5A93C]/20 text-[#E5A93C] font-tabular text-[11px] font-semibold whitespace-nowrap"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[#E5A93C]/20 text-[#E5A93C] tabular-nums text-[11px] font-semibold whitespace-nowrap"
               title="Click to clear bar loop"
             >
               <Repeat className="w-3 h-3" />
@@ -225,7 +237,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
         {/* Clean Progress Counter & Theme Toggle */}
         <div className="flex items-center gap-2.5 ml-auto">
           <span
-            className="font-tabular text-[11px] font-medium whitespace-nowrap"
+            className="tabular-nums text-[11px] font-medium whitespace-nowrap"
             style={{ color: progressPct === 100 ? '#10B981' : mutedText }}
           >
             {completedNotesCount}/{totalNotesCount} notes ({progressPct}%)
@@ -272,6 +284,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
           />
         </div>
       </div>
+      )}
 
       {/* Horizontally Scrollable Grand Staff SVG */}
       <div
@@ -279,8 +292,8 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
         className="relative w-full overflow-x-auto overflow-y-hidden"
       >
         <svg
-          width={totalWidth}
-          height={SVG_HEIGHT}
+          width={totalWidth * scale}
+          height={SVG_HEIGHT * scale}
           viewBox={`0 0 ${totalWidth} ${SVG_HEIGHT}`}
           className="block"
           role="img"
@@ -336,7 +349,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                   fill={isCurrentMeasure ? '#E5A93C' : mutedText}
                   fontSize={10}
                   fontWeight={700}
-                  fontFamily='"JetBrains Mono", monospace'
+                  fontFamily='"Plus Jakarta Sans", system-ui, sans-serif'
                   className="cursor-pointer"
                   onClick={() => onSelectMeasure?.(mIdx)}
                 >
@@ -352,7 +365,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                     fill="#E5A93C"
                     fontSize={9.5}
                     fontWeight={700}
-                    fontFamily='"JetBrains Mono", monospace'
+                    fontFamily='"Plus Jakarta Sans", system-ui, sans-serif'
                   >
                     LOOP
                   </text>
@@ -456,7 +469,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
             fill="#38BDF8"
             fontSize={9}
             fontWeight={700}
-            fontFamily='"JetBrains Mono", monospace'
+            fontFamily='"Plus Jakarta Sans", system-ui, sans-serif'
           >
             RH · TREBLE
           </text>
@@ -477,7 +490,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
             fill="#818CF8"
             fontSize={9}
             fontWeight={700}
-            fontFamily='"JetBrains Mono", monospace'
+            fontFamily='"Plus Jakarta Sans", system-ui, sans-serif'
           >
             LH · BASS
           </text>
@@ -736,7 +749,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                       }
                       fontSize={isTarget ? 12 : 11}
                       fontWeight={700}
-                      fontFamily='"JetBrains Mono", monospace'
+                      fontFamily='"Plus Jakarta Sans", system-ui, sans-serif'
                     >
                       {note.finger}
                     </text>
@@ -773,7 +786,7 @@ export const GrandStaffView: React.FC<GrandStaffViewProps> = ({
                       }
                       fontSize={10}
                       fontWeight={700}
-                      fontFamily='"JetBrains Mono", monospace'
+                      fontFamily='"Plus Jakarta Sans", system-ui, sans-serif'
                     >
                       {note.noteName}
                     </text>

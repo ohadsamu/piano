@@ -247,7 +247,7 @@ export const DAILY_WORKOUTS: WorkoutDefinition[] = [
     id: 'workout-chord-switcher',
     type: 'chord_switcher',
     title: 'Chord Switcher Turbo',
-    subtitle: '90-Second Pop Triad Voicing & Zero-Stall Transition Drill',
+    subtitle: '90-Second Chord Shape & Smooth Switching Drill',
     durationSec: 90,
     description:
       'Lock your 1–3–5 triad hand shape and switch cleanly between C Major, G Major, A Minor, and F Major. Evaluates both chord simultaneity and transition speed.',

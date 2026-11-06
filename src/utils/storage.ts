@@ -19,25 +19,25 @@ export interface PersistedUserProfile {
   watchedVideoIds: string[];
   completedWorkoutCounts: Record<string, number>;
   micCalibration: MicCalibrationConfig;
+  /** Which hint the practice prompt shows. All inputs stay live regardless. */
+  preferredInput?: PreferredInput;
+  /** Steps the user skipped (recorded, but never counted as done). */
+  skippedSteps?: Record<string, number[]>;
+  /** UI-only: show the falling-notes strip under the staff. */
+  showFalling?: boolean;
 }
+
+export type PreferredInput = 'touch' | 'qwerty' | 'midi' | 'mic';
 
 const STORAGE_KEY = 'nocturne_ivory_studio_profile_v1';
 
 const DEFAULT_PROFILE: PersistedUserProfile = {
-  xp: 250,
-  streakDays: 3,
+  xp: 0,
+  streakDays: 0,
   lastPracticeDate: new Date().toISOString().slice(0, 10),
   activeLessonId: 'lesson-01-middle-c-walk',
-  lessonProgress: {
-    'lesson-01-middle-c-walk': {
-      lessonId: 'lesson-01-middle-c-walk',
-      completedStepNumbers: [1],
-      starsEarned: 0,
-      bestAccuracyPct: 0,
-      attemptsCount: 0,
-      lastPlayedIso: new Date().toISOString(),
-    },
-  },
+  // A first-time user has done nothing yet: no step is pre-marked.
+  lessonProgress: {},
   watchedVideoIds: [],
   completedWorkoutCounts: {},
   micCalibration: {

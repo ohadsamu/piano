@@ -108,6 +108,8 @@ We use a disciplined three-family typographic system where each typeface has a s
 
 ### 1.4 Layout Architecture & 4 Core View ASCII Wireframes
 
+> **Superseded:** the wireframes in this section (and the input UX in §7) are replaced by [`docs/superpowers/specs/2026-11-06-ui-refactor-design.md`](../superpowers/specs/2026-11-06-ui-refactor-design.md).
+
 The application is designed for **zero-scroll viewport lock (`100dvh`) during active playing** (View 2 & View 3) so the piano keys and staff never jump while the user is playing, and a clean **two-column studio layout** for curriculum browsing and video study (View 1 & View 4).
 
 #### View 1: Learning Path & Curriculum Hub

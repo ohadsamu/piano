@@ -63,7 +63,7 @@ export const CURRICULUM_LESSONS: Lesson[] = [
     difficulty: 'Beginner 1',
     skillsTaught: [
       '2-Black-Key Chopsticks Landmark',
-      'Middle C (C4) Ledger Line',
+      'Middle C (C4) on Its Own Short Line (a "Ledger Line")',
       'Right Hand Fingers 1–2–3 Arch',
       'Stepping Up & Down by Seconds',
     ],
@@ -96,10 +96,11 @@ export const CURRICULUM_LESSONS: Lesson[] = [
         }),
         // Measure 2: E4 D4 C4(half)
         noteEvent('l01', 1, 4, 1, 64, 'right', 3, {
-          chordSymbol: 'G7',
+          chordSymbol: 'C',
           lyric: 'Three',
         }),
         noteEvent('l01', 1, 5, 1, 62, 'right', 2, {
+          chordSymbol: 'G7',
           lyric: 'white',
         }),
         noteEvent('l01', 1, 6, 2, 60, 'right', 1, {
@@ -137,7 +138,8 @@ export const CURRICULUM_LESSONS: Lesson[] = [
       ],
       accompaniment: [
         { beatStart: 0, durationBeats: 4, midiNotes: [48, 55], style: 'warm_pad', velocity: 46 },
-        { beatStart: 4, durationBeats: 2, midiNotes: [43, 50], style: 'bass_pulse', velocity: 48 },
+        { beatStart: 4, durationBeats: 1, midiNotes: [48, 55], style: 'bass_pulse', velocity: 48 },
+        { beatStart: 5, durationBeats: 1, midiNotes: [43, 53], style: 'bass_pulse', velocity: 48 },
         { beatStart: 6, durationBeats: 2, midiNotes: [48, 55], style: 'warm_pad', velocity: 46 },
         { beatStart: 8, durationBeats: 4, midiNotes: [48, 52, 55], style: 'arpeggio', velocity: 48 },
         { beatStart: 12, durationBeats: 2, midiNotes: [43, 53], style: 'bass_pulse', velocity: 48 },
@@ -208,9 +210,9 @@ export const CURRICULUM_LESSONS: Lesson[] = [
         id: 'l01-step-4',
         stepNumber: 4,
         type: 'slow_flow',
-        title: 'Slow Flow: 70% Guided Tempo (48 BPM)',
+        title: 'Slow Flow: 70% Speed (48 Beats per Minute)',
         instruction:
-          'Play along with warm acoustic bass accompaniment at a relaxed 70% practice tempo.',
+          'Play along with soft bass backing music at a relaxed 70% speed. No rush!',
         coachTip: 'Hold the Half Notes on C4 at the end of Measures 1, 2, and 4 for two full beats.',
         tempoMultiplier: 0.7,
         handFilter: 'right',
@@ -219,9 +221,9 @@ export const CURRICULUM_LESSONS: Lesson[] = [
         id: 'l01-step-5',
         stepNumber: 5,
         type: 'stage_performance',
-        title: 'Stage Performance: 68 BPM Conservatory Check',
+        title: 'Stage Performance: Full Speed (68 BPM)',
         instruction:
-          'Perform The 3-Note Promenade at full tempo with chamber backing to earn your stars and AI Coach report.',
+          'Play The 3-Note Promenade at full speed with the backing music to earn your stars and a Coach report.',
         coachTip: 'Keep your eyes on the music and trust your 1–2–3 finger home positions.',
         tempoMultiplier: 1.0,
         handFilter: 'right',
@@ -494,12 +496,13 @@ export const CURRICULUM_LESSONS: Lesson[] = [
         }),
         // Measure 2: E4(half) D4(half)
         noteEvent('l03', 1, 4, 2, 64, 'right', 3, {
-          chordSymbol: 'G7',
+          chordSymbol: 'C',
           durationType: 'half',
           techniqueTip: 'Half Note: Keep E4 (Finger 3) held down for 2 full beats ("1–2")',
           lyric: 'lu -',
         }),
         noteEvent('l03', 1, 6, 2, 62, 'right', 2, {
+          chordSymbol: 'G7',
           durationType: 'half',
           techniqueTip: 'Half Note: Keep D4 (Finger 2) held down for Beats 3–4',
           lyric: 'ne —',
@@ -528,7 +531,8 @@ export const CURRICULUM_LESSONS: Lesson[] = [
       ],
       accompaniment: [
         { beatStart: 0, durationBeats: 4, midiNotes: [48, 52, 55], style: 'arpeggio', velocity: 46 },
-        { beatStart: 4, durationBeats: 4, midiNotes: [43, 50, 55], style: 'arpeggio', velocity: 46 },
+        { beatStart: 4, durationBeats: 2, midiNotes: [48, 52, 55], style: 'arpeggio', velocity: 46 },
+        { beatStart: 6, durationBeats: 2, midiNotes: [43, 47, 53], style: 'arpeggio', velocity: 46 },
         { beatStart: 8, durationBeats: 2, midiNotes: [48, 52, 55], style: 'bass_pulse', velocity: 48 },
         { beatStart: 10, durationBeats: 2, midiNotes: [43, 47, 53], style: 'bass_pulse', velocity: 48 },
         { beatStart: 12, durationBeats: 4, midiNotes: [48, 52, 55], style: 'warm_pad', velocity: 52 },
@@ -597,7 +601,7 @@ export const CURRICULUM_LESSONS: Lesson[] = [
         id: 'l03-step-4',
         stepNumber: 4,
         type: 'slow_flow',
-        title: 'Slow Flow: 54 BPM Sustain Practice',
+        title: 'Slow Flow: 70% Speed (53 BPM)',
         instruction:
           'Play with the harp arpeggio backing at 70% speed, holding every Half Note for 2 full beats.',
         coachTip: 'Do not lift your finger early on E4 or D4 in Measure 2!',
@@ -839,7 +843,7 @@ export const CURRICULUM_LESSONS: Lesson[] = [
       'Root-Position Triad Formula (1–3–5)',
       'Simultaneous 3-Note Chord Attack',
       'C Major Triad (C4–E4–G4)',
-      'G Major Triad (G4–B4–D5) Air-Frame Shift',
+      'Moving the Chord Shape Up to G Major (G4–B4–D5)',
     ],
     targetNotes: ['C4', 'E4', 'G4', 'B4', 'D5'],
     primaryVideoId: 'vid-05-triad-claw-and-inversions',
@@ -999,7 +1003,7 @@ export const CURRICULUM_LESSONS: Lesson[] = [
         id: 'l05-step-4',
         stepNumber: 4,
         type: 'slow_flow',
-        title: 'Slow Flow: 58 BPM Pop Band Groove',
+        title: 'Slow Flow: 70% Speed (57 BPM)',
         instruction:
           'Play the C and G Major chord pulse at 70% tempo with studio bass and percussion.',
         coachTip: 'In Measure 3, you switch from C Major to G Major after just 2 beats—prepare early!',
@@ -1024,12 +1028,12 @@ export const CURRICULUM_LESSONS: Lesson[] = [
     trackId: 'chords',
     unitNumber: 6,
     title: 'Chords Path II: The 4-Chord Hit Progression (C–G–Am–F)',
-    subtitle: 'Combine Left Hand bass roots with Right Hand triads across I–V–vi–IV',
+    subtitle: 'Left Hand plays the bottom note (root) while Right Hand plays the chord: C–G–Am–F',
     description:
-      'Master the most famous chord progression in modern music (C Major → G Major → A Minor → F Major, heard in Let It Be and Someone Like You), adding emotional A Minor color and Left Hand bass roots.',
+      'Master the most famous chord progression in modern music (C Major → G Major → A Minor → F Major, heard in hundreds of pop songs), adding emotional A Minor color and Left Hand bass roots.',
     difficulty: 'Beginner 2',
     skillsTaught: [
-      'The I–V–vi–IV Pop Anthem Progression (C–G–Am–F)',
+      'The Famous 4-Chord Pattern (C–G–Am–F)',
       'Major vs. Minor Triad Emotional Color (A Minor)',
       'Left Hand Root + Right Hand Triad Voicing',
       'Smooth 4-Measure Harmonic Transitions',
@@ -1194,7 +1198,7 @@ export const CURRICULUM_LESSONS: Lesson[] = [
         id: 'l06-step-4',
         stepNumber: 4,
         type: 'slow_flow',
-        title: 'Slow Flow: 54 BPM Ballad Groove',
+        title: 'Slow Flow: 70% Speed (53 BPM)',
         instruction:
           'Play the 4-Chord Anthem at 70% speed with soulful cello and acoustic drum accompaniment.',
         coachTip: 'Use Beat 4 of each bar to glide your Right Hand frame into the next chord.',
@@ -1351,7 +1355,7 @@ export const CURRICULUM_LESSONS: Lesson[] = [
         id: 'l07-step-2',
         stepNumber: 2,
         type: 'key_discovery',
-        title: 'Key Discovery: G5 Position & Two-Hand Anchors',
+        title: 'Key Discovery: G Position & Two-Hand Anchors',
         instruction:
           'Place your Left Hand on G3–B3–C4 and your Right Hand in G4–A4–B4–C5–D5 position.',
         coachTip: 'Notice how both Pinkies (LH 5 on G3, RH 5 on D5) start the very first beat together!',
@@ -1409,9 +1413,9 @@ export const CURRICULUM_LESSONS: Lesson[] = [
         id: 'l07-step-4',
         stepNumber: 4,
         type: 'slow_flow',
-        title: 'Slow Flow: 58 BPM Chamber Continuo Practice',
+        title: 'Slow Flow: 70% Speed (59 BPM)',
         instruction:
-          'Play Minuet in G at 70% speed with gentle string continuo backing.',
+          'Play Minuet in G at 70% speed with soft string backing music.',
         coachTip: 'Let the eighth notes in Measure 1 (G4–A4–B4–C5) flow evenly into Measure 2’s D5 downbeat.',
         tempoMultiplier: 0.7,
         handFilter: 'both',
@@ -1433,7 +1437,7 @@ export const CURRICULUM_LESSONS: Lesson[] = [
     id: 'lesson-08-fur-elise-gymnopedie',
     trackId: 'synthesis',
     unitNumber: 8,
-    title: 'Expressive Mastery — Für Elise Opening & Gymnopédie Motif',
+    title: 'Expressive Mastery — Für Elise Opening',
     subtitle: 'Master black-key accidentals (D#5 & G#4) and seamless hand-to-hand conversation',
     description:
       "Introduce Black Key Accidentals (D#5 and G#4/G#3), expressive touch, and seamless Left-to-Right Hand handoffs in Beethoven's iconic Für Elise opening in A Minor.",
@@ -1454,118 +1458,117 @@ export const CURRICULUM_LESSONS: Lesson[] = [
       bpm: 78,
       timeSignature: [3, 4],
       keySignature: 'A Minor',
-      totalMeasures: 4,
-      totalBeats: 12,
+      totalMeasures: 7,
+      totalBeats: 21,
+      // Original is 3/8 in sixteenths; written here in 3/4 with every value doubled
+      // (sixteenth -> eighth) so the barlines match Beethoven's. Measure 1 is the
+      // 2-note pickup. Simplification: the low E4 before the second "E5–D#5" is
+      // left out so the hand has a beat to shift up.
       notes: [
-        // Measure 1 (3/4): E5(0.5) D#5(0.5) E5(0.5) D#5(0.5) E5(0.5) B4(0.5)
-        noteEvent('l08', 0, 0, 0.5, 76, 'right', 5, {
+        // Measure 1 (pickup): rest, rest, E5(0.5) D#5(0.5)
+        noteEvent('l08', 0, 2, 0.5, 76, 'right', 5, {
           chordSymbol: 'Am',
           durationType: 'eighth',
-          techniqueTip: 'Slide Right Hand slightly forward: Pinky (5) on E5, Ring (4) poised on black D#5',
+          techniqueTip: 'Pickup notes: count "1, 2" quietly, then start. Pinky (5) on E5, Ring (4) ready over black D#5',
           lyric: 'E',
         }),
-        noteEvent('l08', 0, 0.5, 0.5, 75, 'right', 4, {
+        noteEvent('l08', 0, 2.5, 0.5, 75, 'right', 4, {
           durationType: 'eighth',
-          techniqueTip: 'Black key D#5 (2nd black key of the upper pair) with Ring Finger (4)',
+          techniqueTip: 'Black key D#5 (right key of the upper pair of 2 black keys) with Ring Finger (4)',
           lyric: 'D#',
         }),
-        noteEvent('l08', 0, 1, 0.5, 76, 'right', 5, {
-          durationType: 'eighth',
-          lyric: 'E',
-        }),
-        noteEvent('l08', 0, 1.5, 0.5, 75, 'right', 4, {
-          durationType: 'eighth',
-          lyric: 'D#',
-        }),
-        noteEvent('l08', 0, 2, 0.5, 76, 'right', 5, {
-          durationType: 'eighth',
-          lyric: 'E',
-        }),
-        noteEvent('l08', 0, 2.5, 0.5, 71, 'right', 2, {
+        // Measure 2: E5 D#5 E5 B4 D5 C5 (eighths)
+        noteEvent('l08', 1, 3, 0.5, 76, 'right', 5, { durationType: 'eighth', lyric: 'E' }),
+        noteEvent('l08', 1, 3.5, 0.5, 75, 'right', 4, { durationType: 'eighth', lyric: 'D#' }),
+        noteEvent('l08', 1, 4, 0.5, 76, 'right', 5, { durationType: 'eighth', lyric: 'E' }),
+        noteEvent('l08', 1, 4.5, 0.5, 71, 'right', 2, {
           durationType: 'eighth',
           techniqueTip: 'Reach Index Finger (2) cleanly down to B4',
           lyric: 'B',
         }),
-        // Measure 2 (3/4): D5(0.5) C5(0.5) | Beat 4: LH A3(2) + RH A4(1) | Beat 5: C4(0.5) E4(0.5)
-        noteEvent('l08', 1, 3, 0.5, 74, 'right', 4, {
+        noteEvent('l08', 1, 5, 0.5, 74, 'right', 4, {
           durationType: 'eighth',
-          techniqueTip: 'Now Ring Finger (4) plays white key D5 natural!',
-          lyric: 'D♮',
+          techniqueTip: 'Now Ring Finger (4) plays the white key D5',
+          lyric: 'D',
         }),
-        noteEvent('l08', 1, 3.5, 0.5, 72, 'right', 3, {
-          durationType: 'eighth',
-          lyric: 'C',
-        }),
-        noteEvent('l08', 1, 4, 2, 57, 'left', 2, {
+        noteEvent('l08', 1, 5.5, 0.5, 72, 'right', 3, { durationType: 'eighth', lyric: 'C' }),
+        // Measure 3 (Am): LH A3 + RH A4(1) | rest | C4 E4 A4 (eighths)
+        noteEvent('l08', 2, 6, 1.5, 57, 'left', 2, {
           clef: 'bass',
           chordSymbol: 'Am',
-          durationType: 'half',
-          techniqueTip: 'Left Hand Index (2) anchors A3 warm bass response',
+          durationType: 'quarter',
+          techniqueTip: 'Left Hand Index (2) plays A3 together with Right Hand A4',
         }),
-        noteEvent('l08', 1, 4, 1, 69, 'right', 1, {
+        noteEvent('l08', 2, 6, 1, 69, 'right', 1, {
           durationType: 'quarter',
           techniqueTip: 'Thumb (1) lands on A4 together with Left Hand A3',
           lyric: 'A',
         }),
-        noteEvent('l08', 1, 5, 0.5, 60, 'right', 1, {
+        noteEvent('l08', 2, 7.5, 0.5, 60, 'right', 1, {
           durationType: 'eighth',
-          techniqueTip: 'Arpeggio rise: C4 (1) → E4 (2) → A4 (4)',
+          techniqueTip: 'After a short rest, climb C4 (1) → E4 (2) → A4 (4)',
           lyric: 'C',
         }),
-        noteEvent('l08', 1, 5.5, 0.5, 64, 'right', 2, {
-          durationType: 'eighth',
-          lyric: 'E',
-        }),
-        // Measure 3 (3/4): Beat 6: A4(1) | Beat 7: LH G#3(2) + RH B4(1) | Beat 8: E4(0.5) G#4(0.5)
-        noteEvent('l08', 2, 6, 1, 69, 'right', 4, {
-          durationType: 'quarter',
-          lyric: 'A',
-        }),
-        noteEvent('l08', 2, 7, 2, 56, 'left', 3, {
+        noteEvent('l08', 2, 8, 0.5, 64, 'right', 2, { durationType: 'eighth', lyric: 'E' }),
+        noteEvent('l08', 2, 8.5, 0.5, 69, 'right', 4, { durationType: 'eighth', lyric: 'A' }),
+        // Measure 4 (E): LH G#3 + RH B4(1) | rest | E4 G#4 B4 (eighths)
+        noteEvent('l08', 3, 9, 1.5, 56, 'left', 3, {
           clef: 'bass',
-          chordSymbol: 'E7',
-          durationType: 'half',
-          techniqueTip: 'Left Hand Middle (3) plays black key G#3 for E7 harmony',
+          chordSymbol: 'E',
+          durationType: 'quarter',
+          techniqueTip: 'Left Hand Middle (3) plays the black key G#3',
         }),
-        noteEvent('l08', 2, 7, 1, 71, 'right', 5, {
+        noteEvent('l08', 3, 9, 1, 71, 'right', 5, {
           durationType: 'quarter',
           techniqueTip: 'Right Hand Pinky (5) on B4 together with Left Hand G#3',
           lyric: 'B',
         }),
-        noteEvent('l08', 2, 8, 0.5, 64, 'right', 1, {
+        noteEvent('l08', 3, 10.5, 0.5, 64, 'right', 1, { durationType: 'eighth', lyric: 'E' }),
+        noteEvent('l08', 3, 11, 0.5, 68, 'right', 2, {
           durationType: 'eighth',
-          lyric: 'E',
-        }),
-        noteEvent('l08', 2, 8.5, 0.5, 68, 'right', 2, {
-          durationType: 'eighth',
-          techniqueTip: 'Index Finger (2) touches middle black key G#4',
+          techniqueTip: 'Index Finger (2) on the middle black key of the 3-black-key group: G#4',
           lyric: 'G#',
         }),
-        // Measure 4 (3/4): Beat 9: B4(0.5) C5(0.5) | Beat 10: LH A3(2) + RH A4(2)
-        noteEvent('l08', 3, 9, 0.5, 71, 'right', 4, {
-          durationType: 'eighth',
-          lyric: 'B',
+        noteEvent('l08', 3, 11.5, 0.5, 71, 'right', 4, { durationType: 'eighth', lyric: 'B' }),
+        // Measure 5 (Am): LH A3 + RH C5(1) | rest | E5 D#5 (eighths)
+        noteEvent('l08', 4, 12, 1.5, 57, 'left', 2, {
+          clef: 'bass',
+          chordSymbol: 'Am',
+          durationType: 'quarter',
         }),
-        noteEvent('l08', 3, 9.5, 0.5, 72, 'right', 5, {
-          durationType: 'eighth',
+        noteEvent('l08', 4, 12, 1, 72, 'right', 5, {
+          durationType: 'quarter',
+          techniqueTip: 'Pinky (5) on C5, then use the rest to move your hand up to E5',
           lyric: 'C',
         }),
-        noteEvent('l08', 3, 10, 2, 57, 'left', 2, {
+        noteEvent('l08', 4, 14, 0.5, 76, 'right', 5, { durationType: 'eighth', lyric: 'E' }),
+        noteEvent('l08', 4, 14.5, 0.5, 75, 'right', 4, { durationType: 'eighth', lyric: 'D#' }),
+        // Measure 6: E5 D#5 E5 B4 D5 C5 (eighths)
+        noteEvent('l08', 5, 15, 0.5, 76, 'right', 5, { durationType: 'eighth', lyric: 'E' }),
+        noteEvent('l08', 5, 15.5, 0.5, 75, 'right', 4, { durationType: 'eighth', lyric: 'D#' }),
+        noteEvent('l08', 5, 16, 0.5, 76, 'right', 5, { durationType: 'eighth', lyric: 'E' }),
+        noteEvent('l08', 5, 16.5, 0.5, 71, 'right', 2, { durationType: 'eighth', lyric: 'B' }),
+        noteEvent('l08', 5, 17, 0.5, 74, 'right', 4, { durationType: 'eighth', lyric: 'D' }),
+        noteEvent('l08', 5, 17.5, 0.5, 72, 'right', 3, { durationType: 'eighth', lyric: 'C' }),
+        // Measure 7 (Am): LH A3 + RH A4, held to the end
+        noteEvent('l08', 6, 18, 3, 57, 'left', 2, {
           clef: 'bass',
           chordSymbol: 'Am',
           durationType: 'half',
-          techniqueTip: 'Final A Minor resolution: LH A3 (2) + RH A4 (3) held for 2 beats',
+          techniqueTip: 'Final A Minor: LH A3 (2) + RH A4 (1) held for 3 beats',
         }),
-        noteEvent('l08', 3, 10, 2, 69, 'right', 3, {
+        noteEvent('l08', 6, 18, 3, 69, 'right', 1, {
           durationType: 'half',
-          lyric: 'Home —',
+          lyric: 'Home — —',
         }),
       ],
       accompaniment: [
-        { beatStart: 0, durationBeats: 3, midiNotes: [57, 64], style: 'warm_pad', velocity: 38 },
-        { beatStart: 3, durationBeats: 3, midiNotes: [45, 52, 57], style: 'arpeggio', velocity: 45 },
-        { beatStart: 6, durationBeats: 3, midiNotes: [52, 56, 59], style: 'arpeggio', velocity: 45 },
-        { beatStart: 9, durationBeats: 3, midiNotes: [45, 52, 57], style: 'warm_pad', velocity: 50 },
+        { beatStart: 3, durationBeats: 3, midiNotes: [57, 64], style: 'warm_pad', velocity: 38 },
+        { beatStart: 6, durationBeats: 3, midiNotes: [45, 52, 57], style: 'arpeggio', velocity: 45 },
+        { beatStart: 9, durationBeats: 3, midiNotes: [52, 56, 59], style: 'arpeggio', velocity: 45 },
+        { beatStart: 12, durationBeats: 3, midiNotes: [45, 52, 57], style: 'arpeggio', velocity: 45 },
+        { beatStart: 15, durationBeats: 3, midiNotes: [57, 64], style: 'warm_pad', velocity: 38 },
+        { beatStart: 18, durationBeats: 3, midiNotes: [45, 52, 57], style: 'warm_pad', velocity: 50 },
       ],
     },
     steps: [
@@ -1576,7 +1579,7 @@ export const CURRICULUM_LESSONS: Lesson[] = [
         title: 'Watch: Black Key Touch & The Für Elise Chromatic Motif',
         instruction:
           'See how sliding your Right Hand 2 cm toward the fallboard puts Ring Finger (4) directly over D#5 without wrist twist.',
-        coachTip: 'Notice how Finger 4 plays black D#5 in Measure 1, then white D5 natural in Measure 2.',
+        coachTip: 'Notice how Finger 4 plays the black key D#5 first, then the white key D5 a moment later.',
         videoId: 'vid-07-black-keys-and-accidentals',
       },
       {
@@ -1633,8 +1636,8 @@ export const CURRICULUM_LESSONS: Lesson[] = [
         type: 'wait_mode',
         title: 'Wait Mode: Für Elise Untimed Walkthrough',
         instruction:
-          'Walk through all 4 measures of Für Elise untimed. Pay close attention to D#5 in Measure 1 vs. D5 natural in Measure 2.',
-        coachTip: 'In Measure 3, both Left Hand (G#3) and Right Hand (G#4) visit the middle black key of the 3-black-key group.',
+          'Walk through Für Elise at your own pace. Watch for the black key D#5 at the start, then the white key D5 a few notes later.',
+        coachTip: 'In Measure 4, both hands visit the middle black key of a 3-black-key group: Left Hand G#3 and Right Hand G#4.',
         handFilter: 'both',
       },
       {

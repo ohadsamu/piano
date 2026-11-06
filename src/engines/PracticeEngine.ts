@@ -71,6 +71,17 @@ interface InternalNoteAttemptState {
   completedAtMs: number | null;
 }
 
+/**
+ * Largest playhead advance a single tick() may apply in moving modes (the wait-mode clock
+ * still takes the full delta). rAF pauses while a tab is hidden, and the
+ * first frame after it returns can report a delta of many seconds; without a clamp a moving
+ * pass (slow_practice / performance) would be fast-forwarded to the end with every note missed.
+ */
+export const MAX_TICK_DELTA_MS = 250;
+
+/** Mic note_on of a pitch the engine itself just played as a hint cue is speaker echo. */
+export const HINT_CUE_ECHO_WINDOW_MS = 900;
+
 export class PracticeEngine {
   private score: ScoreData;
   private audioEngine: AudioEngineAdapter | null = null;
@@ -121,6 +132,8 @@ export class PracticeEngine {
   private lastMetronomeBeatInt = -1;
   private triggeredAccompanimentIndices = new Set<number>();
   private triggeredAutoDemoNoteIds = new Set<string>();
+  private hintCueGuardUntilMs = new Map<number, number>();
+  private suppressedMicMidis = new Set<number>();
 
   constructor(
     initialScore?: ScoreData,
@@ -262,8 +275,62 @@ export class PracticeEngine {
     this.isCompleted = false;
 
     this.rebuildSessionGroups();
+    if (this.mode === 'remediation_drill' && this.remediationPlan) {
+      if (this.skipEmptyRemediationStages()) {
+        return this.getSnapshot();
+      }
+    }
     this.emitSnapshot();
     return this.getSnapshot();
+  }
+
+  /**
+   * A remediation stage whose measureRange x handFilter contains no notes can never produce a
+   * "clean pass", so it would loop forever. Skip such stages; if none remain, complete.
+   * Returns true when the session was completed.
+   */
+  private skipEmptyRemediationStages(): boolean {
+    if (!this.remediationPlan) return false;
+    const stages = this.remediationPlan.stages;
+    while (this.beatGroups.length === 0) {
+      if (this.remediationStageIndex + 1 < stages.length) {
+        const next = this.remediationStageIndex + 1;
+        this.remediationCleanPasses = 0;
+        this.applyRemediationStage(next);
+        this.callbacks.onRemediationStageAdvance?.(next);
+        this.rebuildSessionGroups();
+      } else {
+        this.completeSession();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Re-arms a finished session so it accepts input again with the current settings
+   * (mode, tempo, hand filter, loop range). Remediation drills restart from stage 1.
+   */
+  private restartPass(): void {
+    if (this.mode === 'remediation_drill' && this.remediationPlan) {
+      this.remediationCleanPasses = 0;
+      this.applyRemediationStage(0);
+    }
+    this.discoveryIndex = 0;
+    this.discoveryCompletedCount = 0;
+    this.streak = 0;
+    this.maxStreak = 0;
+    this.completedAttemptHistory = [];
+    this.liveCorrection = null;
+    this.wrongPlayedMidis.clear();
+    this.currentlyHeldMidis.clear();
+    this.isPlaying = true;
+    this.isPaused = false;
+    this.isCompleted = false;
+    this.rebuildSessionGroups();
+    if (this.mode === 'remediation_drill' && this.remediationPlan) {
+      this.skipEmptyRemediationStages();
+    }
   }
 
   public startRemediationPlan(plan: RemediationPlan): PracticeSessionSnapshot {
@@ -408,7 +475,17 @@ export class PracticeEngine {
     this.emitSnapshot();
   }
 
+  /**
+   * Starts / un-pauses the session. If the previous pass already completed, this restarts
+   * the pass with the current settings (a completed engine never sits in a "playing but
+   * ignoring input" state).
+   */
   public resume(): void {
+    if (this.isCompleted) {
+      this.restartPass();
+      this.emitSnapshot();
+      return;
+    }
     if (!this.isPlaying) {
       this.isPlaying = true;
     }
@@ -427,6 +504,7 @@ export class PracticeEngine {
   public stop(): void {
     this.isPlaying = false;
     this.isPaused = false;
+    this.isCompleted = false;
     this.currentlyHeldMidis.clear();
     this.wrongPlayedMidis.clear();
     this.audioEngine?.stopAll?.();
@@ -435,7 +513,7 @@ export class PracticeEngine {
   }
 
   public setMode(mode: PracticeMode): void {
-    this.startPractice(mode, { AutoStart: this.isPlaying });
+    this.startPractice(mode, { AutoStart: this.isPlaying || this.isCompleted });
   }
 
   public setTempoMultiplier(multiplier: number): void {
@@ -445,12 +523,22 @@ export class PracticeEngine {
 
   public setHandFilter(hand: Hand): void {
     this.handFilter = hand;
+    if (this.isCompleted) {
+      this.restartPass();
+      this.emitSnapshot();
+      return;
+    }
     this.rebuildSessionGroups();
     this.emitSnapshot();
   }
 
   public setLoopRange(range: [number, number] | null): void {
     this.loopRange = range;
+    if (this.isCompleted) {
+      this.restartPass();
+      this.emitSnapshot();
+      return;
+    }
     this.rebuildSessionGroups();
     this.emitSnapshot();
   }
@@ -488,7 +576,7 @@ export class PracticeEngine {
    * Advances the real-time practice clock by deltaMs milliseconds.
    */
   public tick(deltaMs: number): PracticeSessionSnapshot {
-    const safeDelta = Math.max(0, deltaMs);
+    const safeDelta = Number.isFinite(deltaMs) ? Math.max(0, deltaMs) : 0;
     this.clockMs += safeDelta;
 
     if (!this.isPlaying || this.isPaused || this.isCompleted) {
@@ -523,6 +611,10 @@ export class PracticeEngine {
               (n) => !currentGroup.satisfiedNoteIds.has(n.id)
             );
             if (firstUnsatisfied) {
+              this.hintCueGuardUntilMs.set(
+                firstUnsatisfied.midi,
+                this.clockMs + HINT_CUE_ECHO_WINDOW_MS
+              );
               this.audioEngine?.playCoachCue?.(
                 'hint_target',
                 firstUnsatisfied.midi
@@ -542,7 +634,9 @@ export class PracticeEngine {
     const startBeat = loopStartMeasure * beatsPerMeasure;
     const endBeat = (loopEndMeasure + 1) * beatsPerMeasure;
 
-    const deltaBeats = (safeDelta * effectiveBpm) / 60000;
+    // Clamp only the playhead advance (wait-mode timers keep the exact wall-clock delta).
+    const playheadDeltaMs = Math.min(MAX_TICK_DELTA_MS, safeDelta);
+    const deltaBeats = (playheadDeltaMs * effectiveBpm) / 60000;
     const previousBeat = this.currentBeat;
     this.currentBeat += deltaBeats;
     this.currentMeasure = Math.min(
@@ -673,6 +767,19 @@ export class PracticeEngine {
    * Processes a live NoteInputEvent (from Microphone, Web MIDI, or Virtual/QWERTY Keyboard).
    */
   public handleNoteInput(event: NoteInputEvent): PracticeSessionSnapshot {
+    if (event.source === 'microphone') {
+      if (event.type === 'note_on') {
+        const guardUntil = this.hintCueGuardUntilMs.get(event.midi);
+        if (guardUntil !== undefined && this.clockMs <= guardUntil) {
+          // The mic heard our own hint cue through the speakers; ignore it.
+          this.suppressedMicMidis.add(event.midi);
+          return this.getSnapshot();
+        }
+      } else if (this.suppressedMicMidis.delete(event.midi)) {
+        return this.getSnapshot();
+      }
+    }
+
     if (event.type === 'note_off') {
       this.currentlyHeldMidis.delete(event.midi);
       this.wrongPlayedMidis.delete(event.midi);
@@ -795,7 +902,8 @@ export class PracticeEngine {
   private evaluateWaitModeInput(event: NoteInputEvent): void {
     const group = this.beatGroups[this.activeGroupIndex];
     if (!group) {
-      this.handlePassReachedEnd();
+      // No playable notes in this pass (e.g. hand filter / loop range excludes everything).
+      // Do not fabricate a completion; snapshot.totalNoteCount === 0 tells the UI why.
       return;
     }
 
@@ -822,11 +930,11 @@ export class PracticeEngine {
       );
 
       if (st) {
+        // Only a wrong key counts as a fault. Wait mode has no clock pressure: the 2200ms
+        // hesitation hint is guidance, and hesitation is still recorded in hesitationMs
+        // for the coach. (Previously a slow-but-correct beginner scored 0% first-try.)
         const hadPriorFault =
-          st.status === 'hint_active' ||
-          st.status === 'wrong_pitch' ||
-          st.wrongMidisPlayed.length > 0 ||
-          hesitationMs > 2200;
+          st.status === 'wrong_pitch' || st.wrongMidisPlayed.length > 0;
 
         st.status = hadPriorFault ? 'correct_after_hint' : 'correct_first_try';
         st.hesitationMs = Math.max(st.hesitationMs, hesitationMs);
@@ -1099,6 +1207,7 @@ export class PracticeEngine {
           this.audioEngine?.playCoachCue?.('step_complete');
           this.callbacks.onRemediationStageAdvance?.(nextStageIndex);
           this.rebuildSessionGroups();
+          if (this.skipEmptyRemediationStages()) return;
           this.emitSnapshot();
           return;
         } else {
@@ -1186,7 +1295,11 @@ export class PracticeEngine {
     const hintedMidis = new Set<number>();
 
     const execMode = this.getEffectiveExecutionMode();
+    let completedNoteCount = 0;
+    let totalNoteCount = 0;
     if (execMode === 'key_discovery') {
+      totalNoteCount = this.discoveryPrompts.length;
+      completedNoteCount = Math.min(totalNoteCount, this.discoveryCompletedCount);
       const prompt = this.discoveryPrompts[this.discoveryIndex];
       if (prompt) {
         activeTargetMidis.add(prompt.targetMidi);
@@ -1195,8 +1308,12 @@ export class PracticeEngine {
         }
       }
     } else {
+      totalNoteCount = this.noteStates.size;
       for (const [noteId, st] of this.noteStates.entries()) {
         noteStatuses[noteId] = st.status;
+        if (st.status === 'correct_first_try' || st.status === 'correct_after_hint') {
+          completedNoteCount += 1;
+        }
         if (st.status === 'active_target') {
           activeTargetMidis.add(st.note.midi);
         } else if (st.status === 'hint_active') {
@@ -1234,6 +1351,12 @@ export class PracticeEngine {
       maxStreak: this.maxStreak,
       remediationStageIndex: this.remediationStageIndex,
       remediationCleanPasses: this.remediationCleanPasses,
+      completedNoteCount,
+      totalNoteCount,
+      progressPct:
+        totalNoteCount > 0
+          ? Math.round((completedNoteCount / totalNoteCount) * 100)
+          : 0,
     };
   }
 
