@@ -22,7 +22,8 @@ Live at https://ohadsamu.github.io/piano/ (GitHub Pages, deployed by `.github/wo
 
 ## Rules
 
-- **Never stuck:** practice must be completable with no mic or MIDI. The on-screen keyboard stays visible during practice, QWERTY works (Q W E R T Y U = C4–B4, Z X C ... = C3 octave), and "Show me" / "Skip this note" escape hatches exist.
+- **Microphone is the default input** (the owner plays a real e-piano). `utils/micAutoStart.ts` keeps it listening: browsers hold audio suspended until a tap, so it retries on the first gesture. Choosing another input turns the mic off.
+- **Never stuck:** practice must also be completable with no mic or MIDI. The on-screen keyboard stays visible during practice, QWERTY works (Q W E R T Y U = C4–B4, Z X C ... = C3 octave), and "Show me" / "Skip this note" escape hatches exist.
 - **Truthful progress:** show the engine snapshot's `completedNoteCount` / `totalNoteCount` / `progressPct`. Only offer "Next" after a real completion, and don't mark skipped steps done.
 - **PracticeEngine contract:** call `startPractice(mode, { lessonStep, AutoStart })` on every start or step change. Always pass `lessonStep` (or explicit tempo/hand/loop), or settings go stale. Completion fires `onSessionComplete` and sets `snapshot.isCompleted`. Run diagnosis only after completion. The UI owns advancing to the next step.
 - **Mobile first:** 360px portrait is a first-class layout. No horizontal page scroll, touch targets ≥44px, respect safe-area insets.

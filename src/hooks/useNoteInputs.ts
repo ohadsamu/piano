@@ -9,6 +9,8 @@ import type {
 import type { PracticeEngine } from '../engines/PracticeEngine';
 import { sharedAudioEngine } from '../engines/AudioEngine';
 import { sharedInputManager } from '../engines/InputManager';
+import { createMicAutoStart } from '../utils/micAutoStart';
+import type { PreferredInput } from '../utils/storage';
 
 /** Untimed steps start on the first key press (spec §4.3 rule 3). */
 export function isUntimedAwaitingStart(snap: PracticeSessionSnapshot): boolean {
@@ -26,6 +28,8 @@ export interface NoteInputsOptions {
    * first note). Defaults to never, i.e. legacy behaviour.
    */
   shouldAutoStart?: (snap: PracticeSessionSnapshot) => boolean;
+  /** When 'mic', the microphone is kept listening automatically. */
+  preferredInput?: PreferredInput;
 }
 
 export function useNoteInputs(engine: PracticeEngine, opts: NoteInputsOptions = {}) {
@@ -39,6 +43,27 @@ export function useNoteInputs(engine: PracticeEngine, opts: NoteInputsOptions = 
 
   const optsRef = useRef(opts);
   optsRef.current = opts;
+
+  const micAuto = useRef<ReturnType<typeof createMicAutoStart> | null>(null);
+  useEffect(() => {
+    const ctl = createMicAutoStart({
+      input: sharedInputManager,
+      audio: sharedAudioEngine,
+      target: window,
+      onResult: (ok) => setMicStatus(ok ? 'on' : 'blocked'),
+    });
+    micAuto.current = ctl;
+    return () => {
+      ctl.dispose();
+      micAuto.current = null;
+    };
+  }, []);
+  useEffect(() => {
+    const p = opts.preferredInput;
+    if (!p) return;
+    micAuto.current?.setPreferred(p);
+    if (p !== 'mic') setMicStatus('off');
+  }, [opts.preferredInput]);
 
   useEffect(() => {
     void sharedInputManager.startDefaultInputs();
@@ -85,9 +110,11 @@ export function useNoteInputs(engine: PracticeEngine, opts: NoteInputsOptions = 
   const toggleMic = useCallback(async () => {
     if (sharedInputManager.isMicrophoneActive()) {
       sharedInputManager.disableMicrophone();
+      micAuto.current?.userStopped();
       setMicStatus('off');
       return;
     }
+    micAuto.current?.userStarted();
     let ok = false;
     try {
       ok = await sharedInputManager.enableMicrophone();

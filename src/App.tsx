@@ -13,6 +13,7 @@ import { useStepCompletion } from './hooks/useStepCompletion';
 import { usePracticeController, shouldAutoStartFor, type SheetName } from './hooks/usePracticeController';
 import type { Selection } from './components/practice/types';
 import { COPY } from './components/copy';
+import { resolvePreferredInput } from './utils/storage';
 import { AppHeader } from './components/shell/AppHeader';
 import { InputStatusChip } from './components/shell/InputStatusChip';
 import { HomeScreen } from './components/home/HomeScreen';
@@ -48,8 +49,10 @@ export const App: React.FC = () => {
   const completion = useStepCompletion(profileApi, flowRef, key, setReport);
 
   const { engine, snapshot } = usePracticeSession({ onComplete: completion.onComplete });
+  const preferred = resolvePreferredInput(profile.preferredInput);
   const inputs = useNoteInputs(engine, {
     initialMicCalibration: profile.micCalibration,
+    preferredInput: preferred,
     shouldAutoStart: (snap) => inPractice && shouldAutoStartFor(flowRef.current, snap),
   });
 
@@ -95,7 +98,6 @@ export const App: React.FC = () => {
   const lesson = flow.lesson ?? getLessonById(profile.activeLessonId);
   const { results, nextLabel } = completion.resultsFor(flow);
   const introVideo = getVideoById(tipVideoId ?? (flow.step?.videoId || lesson.primaryVideoId)) ?? null;
-  const preferred = profile.preferredInput;
   const inputHint =
     preferred === 'mic' || preferred === 'midi' ? 'piano' : preferred === 'qwerty' || (!preferred && finePointer) ? 'qwerty' : 'none';
   const chip = (

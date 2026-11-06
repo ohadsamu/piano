@@ -29,6 +29,11 @@ export interface PersistedUserProfile {
 
 export type PreferredInput = 'touch' | 'qwerty' | 'midi' | 'mic';
 
+/** The microphone (listening to a real piano) is the default way to play. */
+export function resolvePreferredInput(p: PreferredInput | undefined): PreferredInput {
+  return p ?? 'mic';
+}
+
 const STORAGE_KEY = 'nocturne_ivory_studio_profile_v1';
 
 const DEFAULT_PROFILE: PersistedUserProfile = {
